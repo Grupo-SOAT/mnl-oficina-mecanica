@@ -1,0 +1,27 @@
+get:
+  tags: [ Reports ]
+  summary: Tempo médio de execução de todos os serviços
+  operationId: getAllServicesAverageTime
+  security:
+    - SessionToken: [ ]
+  responses:
+    '200':
+      description: Relatório do tempo médio de todos os serviços
+      content:
+        text/csv:
+          schema:
+            type: string
+    '204':
+      description: Sem resultados
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório de Tempo Médio de Serviço</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 28px 30px 22px;
+            background: #ffffff;
+            color: #111827;
+            font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        .report-header {
+            width: 100%;
+            margin-bottom: 22px;
+            text-align: center;
+        }
+
+        .report-header__logo {
+            width: 40%;
+            margin: 0 auto 14px;
+        }
+
+        .report-header__logo img {
+            display: block;
+            width: 100%;
+            height: auto;
+            margin: 0 auto;
+        }
+
+        .report-header__title h1 {
+            margin: 0;
+            color: #111827;
+            font-size: 18px;
+            line-height: 1.1;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .report-meta {
+            margin: 0 0 18px;
+            font-size: 13px;
+            color: #4b5563;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-spacing: 0;
+            table-layout: fixed;
+            margin: 0;
+        }
+
+        .report-table td {
+            padding: 10px 12px;
+            vertical-align: middle;
+            font-size: 13px;
+        }
+
+        .report-table tr:not(:last-child) td {
+            border-bottom: 2px solid #d97706;
+        }
+
+        .report-table__label {
+            width: 64%;
+            font-weight: 700;
+            color: #111827;
+            border-right: 2px solid #111827;
+            white-space: nowrap;
+        }
+
+        .report-table__value {
+            width: 36%;
+            color: #111827;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        .report-footer {
+            position: absolute;
+            bottom: 0px;
+            width: 100%;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            color: #4b5563;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+<header class="report-header">
+    <div class="report-header__logo">
+        <img th:src="${baseUrl + '/img/logo.svg'}" alt="Logo Oficina Mecânica">
+    </div>
+    <div class="report-header__title">
+        <h1>Relatório de Tempo Médio de Serviço</h1>
+    </div>
+</header>
+
+<p class="report-meta">
+    #<span th:text="${id}">0</span> - <span th:text="${name}">xyz</span>
+</p>
+
+<table class="report-table" aria-label="Dados do relatório de tempo médio de serviço">
+    <tbody>
+    <tr>
+        <td class="report-table__label">Total de serviços criados</td>
+        <td class="report-table__value" th:text="${totalCreated}">0</td>
+    </tr>
+    <tr>
+        <td class="report-table__label">Total de serviços concluídos</td>
+        <td class="report-table__value" th:text="${totalCompleted}">0</td>
+    </tr>
+    <tr>
+        <td class="report-table__label">Tempo médio entre criação e conclusão</td>
+        <td class="report-table__value" th:text="${averageTimeBetweenCreateAndComplete}">0.0h</td>
+    </tr>
+    <tr>
+        <td class="report-table__label">Tempo médio entre início e conclusão</td>
+        <td class="report-table__value" th:text="${averageTimeBetweenStartAndComplete}">0.0h</td>
+    </tr>
+    <tr>
+        <td class="report-table__label">Tempo médio entre aprovação e conclusão</td>
+        <td class="report-table__value" th:text="${averageTimeBetweenApproveAndComplete}">0.0h</td>
+    </tr>
+    <tr>
+        <td class="report-table__label">Tempo médio de espera da resposta do cliente</td>
+        <td class="report-table__value" th:text="${averageTimeAwaitingBudgetApproval}">0.0h</td>
+    </tr>
+    </tbody>
+</table>
+
+<footer class="report-footer">
+    Documento criado em <span th:text="${reportGeneratedAt}">25/04/2026 14:00</span>
+</footer>
+</body>
+</html>

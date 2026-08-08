@@ -1,0 +1,7 @@
+title: Request de pedido de compra
+description: Request de criação de pedido de compra de insumos
+type: object
+required: [ supplierId, requestedSupplies ]
+properties:
+  supplierId: { type: integer, format: int64 }
+  requestedSupplies: { type: array, items: { $ref: './PurchaseSupplyData.yaml' }, minItems: 1 }

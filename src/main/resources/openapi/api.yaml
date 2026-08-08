@@ -1,0 +1,123 @@
+openapi: 3.0.3
+
+info:
+  title: Mechanical Workshop System API
+  description: |
+    API REST para gerenciamento de oficina mecânica com DDD (Domain-Driven Design).
+    Suporta autenticação por Session Token (p/ usuários humanos) ou API Key (p/ chatbot).
+  version: 1.0.0
+  contact:
+    name: API Support
+    url: https://github.com/Grupo-SOAT/sistema-oficina-mecanica
+  license:
+    name: MIT
+
+servers:
+  - url: /api/v1
+
+tags:
+  - name: Authentication
+    description: Login e autenticação (usuários + chatbot)
+  - name: Users
+    description: Gerenciamento de usuários (admin)
+  - name: Owners
+    description: Gerenciamento de clientes
+  - name: Vehicles
+    description: Gerenciamento de veículos
+  - name: Catalog Services
+    description: Gerenciamento do catálogo de serviços ofertados
+  - name: Services
+    description: Gerenciamento de serviços de uma OS
+  - name: Supplies
+    description: Gerenciamento de insumos e estoque
+  - name: Suppliers
+    description: Gerenciamento de fornecedores
+  - name: Service Orders
+    description: Ciclo de vida de Ordens de Serviço (OS)
+  - name: Purchase Orders
+    description: Pedidos de compra
+  - name: Reports
+    description: Exportação de relatórios
+
+components:
+  securitySchemes:
+    SessionToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Session token obtido após login com usuário/senha
+
+    APIKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API Key para autenticação do chatbot
+
+paths:
+  /auth/login:
+    $ref: './endpoints/auth_login.yaml'
+  /auth/chatbot:
+    $ref: './endpoints/auth_chatbot.yaml'
+  /auth/change-password:
+    $ref: './endpoints/auth_change-password.yaml'
+
+  /users:
+    $ref: './endpoints/users.yaml'
+  /users/{id}:
+    $ref: './endpoints/users_id.yaml'
+  /users/{id}/reset-password:
+    $ref: './endpoints/users_reset-password.yaml'
+
+  /owners:
+    $ref: './endpoints/owners.yaml'
+  /owners/{id}:
+    $ref: './endpoints/owners_id.yaml'
+
+  /vehicles:
+    $ref: './endpoints/vehicles.yaml'
+  /vehicles/{id}:
+    $ref: './endpoints/vehicles_id.yaml'
+
+  /catalog/services:
+    $ref: './endpoints/catalog-services.yaml'
+  /catalog/services/{id}:
+    $ref: './endpoints/catalog-services_id.yaml'
+
+  /supplies:
+    $ref: './endpoints/supplies.yaml'
+  /supplies/{id}:
+    $ref: './endpoints/supplies_id.yaml'
+
+#  /suppliers:
+#    $ref: './endpoints/suppliers.yaml'
+#  /suppliers/{id}:
+#    $ref: './endpoints/suppliers_id.yaml'
+
+#  /purchase-orders:
+#    $ref: './endpoints/purchase-orders.yaml'
+#  /purchase-orders/{id}:
+#    $ref: './endpoints/purchase-orders_id.yaml'
+
+  /service-orders:
+    $ref: './endpoints/service-orders.yaml'
+  /service-orders/cascade:
+    $ref: './endpoints/service-orders_cascade.yaml'
+  /service-orders/{id}:
+    $ref: './endpoints/service-orders_id.yaml'
+  /service-orders/{id}/services:
+    $ref: './endpoints/service-orders_services.yaml'
+  /service-orders/{id}/services/{serviceId}:
+    $ref: './endpoints/service-orders_services_id.yaml'
+  /service-orders/{id}/progress:
+    $ref: './endpoints/service-orders_progress.yaml'
+  /service-orders/{id}/budget:
+    $ref: './endpoints/service-orders_budget_decision.yaml'
+
+  /reports/catalog/services/{id}/average-time:
+    $ref: './endpoints/reports_service_average_time.yaml'
+  /reports/catalog/services/average-time:
+    $ref: './endpoints/reports_all_services_average_time.yaml'
+#  /reports/service-orders/{id}/budget:
+#    $ref: './endpoints/reports_service-order_budget.yaml'
+#  /reports/purchase-order/{id}:
+#    $ref: './endpoints/reports_purchase-order.yaml'

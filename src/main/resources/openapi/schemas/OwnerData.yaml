@@ -1,0 +1,7 @@
+title: Dados do cliente
+description: Informações de um cliente
+type: object
+allOf: [ { $ref: './OwnerRequest.yaml' } ]
+required: [ id ]
+properties:
+  id: { type: integer, format: int64 }

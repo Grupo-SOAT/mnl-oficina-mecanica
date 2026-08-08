@@ -1,0 +1,7 @@
+title: Token de Sessão
+description: Válido apenas para a próxima chamada a qualquer endpoint que a role tenha acesso
+type: object
+required: [ token, expiresAt ]
+properties:
+  token: { type: string }
+  expiresAt: { type: string, format: date-time }

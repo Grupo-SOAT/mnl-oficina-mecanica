@@ -1,0 +1,6 @@
+type: object
+required: [ code, reason, message ]
+properties:
+  code: { type: integer, example: 404 }
+  reason: { type: string, example: ID_NOT_FOUND }
+  message: { type: string, example: Nenhum id correspondente na base de dados }

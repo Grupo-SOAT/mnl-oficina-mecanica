@@ -1,0 +1,7 @@
+title: Dados de paginação
+type: object
+required: [ pageSize, cursor, isLast ]
+properties:
+  pageSize: { type: integer }
+  cursor: { type: string }
+  isLast: { type: boolean }

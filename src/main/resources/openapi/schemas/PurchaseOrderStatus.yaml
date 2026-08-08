@@ -1,0 +1,9 @@
+title: Status do pedido de compra de insumo
+type: string
+enum:
+  - CREATED
+  - CONFIRMED
+  - CANCELLED_BY_SUPPLIER
+  - CANCELLED_BY_STOREKEEPER
+  - DISPATCHED
+  - COMPLETED

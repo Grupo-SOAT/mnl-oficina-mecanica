@@ -1,0 +1,89 @@
+get:
+  tags: [ Suppliers ]
+  summary: Listar fornecedores (paginado)
+  operationId: listSuppliers
+  security:
+    - SessionToken: [ ]
+  parameters:
+    - in: query
+      name: id
+      description: ID do fornecedor
+      schema: { type: integer, format: int64 }
+    - in: query
+      name: document
+      description: Documento do fornecedor
+      schema: { type: string }
+    - in: query
+      name: pageSize
+      description: Tamanho da página
+      schema: { type: integer, default: 10 }
+    - in: query
+      name: cursor
+      description: Cursor da paginação (obtido através da página anterior)
+      schema: { type: string }
+  responses:
+    '200':
+      description: Lista de fornecedores
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/PaginatedSupplierResponse.yaml'
+    '204':
+      description: Sem resultados
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+
+post:
+  tags: [ Suppliers ]
+  summary: Criar novo fornecedor
+  operationId: createSupplier
+  security:
+    - SessionToken: [ ]
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/SupplierRequest.yaml'
+  responses:
+    '201':
+      description: Fornecedor criado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/SupplierData.yaml'
+    '400':
+      description: Inválido
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '409':
+      description: Conflito
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+

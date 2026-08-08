@@ -1,0 +1,9 @@
+title: Status da Ordem de Serviço
+type: string
+enum:
+  - AWAITING_APPROVAL
+  - REJECTED
+  - CANCELLED
+  - APPROVED
+  - IN_PROGRESS
+  - COMPLETED

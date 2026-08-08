@@ -1,0 +1,20 @@
+title: Dados da Ordem de Serviço
+description: Informações de uma Ordem de Serviço
+type: object
+allOf: [ { $ref: './ServiceOrderRequest.yaml' } ]
+required: [ id, status ]
+properties:
+  id: { type: integer, format: int64 }
+  status: { $ref: '../schemas/ServiceOrderStatus.yaml' }
+  statusLabel: { type: string, description: 'Status legível em português' }
+  estimatedAmount: { type: number, format: decimal }
+  createdAt: { type: string, format: date-time }
+  updatedAt: { type: string, format: date-time }
+  inspectedAt: { type: string, format: date-time }
+  partiallyRejectedAt: { type: string, format: date-time }
+  rejectedAt: { type: string, format: date-time }
+  cancelledAt: { type: string, format: date-time }
+  approvedAt: { type: string, format: date-time }
+  startedAt: { type: string, format: date-time }
+  completedAt: { type: string, format: date-time }
+  deliveredAt: { type: string, format: date-time }

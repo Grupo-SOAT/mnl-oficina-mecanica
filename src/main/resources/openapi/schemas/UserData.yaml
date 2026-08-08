@@ -1,0 +1,7 @@
+title: Dados do usuário
+description: Informações de um usuário
+type: object
+allOf: [ { $ref: './UserRequest.yaml' } ]
+required: [ id, username, roles ]
+properties:
+  id: { type: integer, format: int64 }

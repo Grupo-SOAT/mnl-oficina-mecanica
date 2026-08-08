@@ -1,0 +1,124 @@
+get:
+  tags: [ Owners ]
+  summary: Obter cliente por ID
+  operationId: getOwnerById
+  security:
+    - SessionToken: [ ]
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema: { type: integer, format: int64 }
+  responses:
+    '200':
+      description: Recurso
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/OwnerData.yaml'
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '404':
+      description: Não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+
+patch:
+  tags: [ Owners ]
+  summary: Atualizar cliente
+  operationId: updateOwner
+  security:
+    - SessionToken: [ ]
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema: { type: integer, format: int64 }
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/OwnerData.yaml'
+  responses:
+    '200':
+      description: Recurso
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/OwnerData.yaml'
+    '400':
+      description: Inválido
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '404':
+      description: Não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '409':
+      description: Conflito
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+
+delete:
+  tags: [ Owners ]
+  summary: Deletar cliente
+  operationId: deleteOwner
+  security:
+    - SessionToken: [ ]
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema: { type: integer, format: int64 }
+  responses:
+    '202':
+      description: Aceito
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '404':
+      description: Não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'

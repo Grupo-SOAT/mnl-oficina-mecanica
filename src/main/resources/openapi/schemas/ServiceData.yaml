@@ -1,0 +1,17 @@
+title: Dados do serviço
+description: Informações de um serviço oferecido
+type: object
+allOf: [ { $ref: './ServiceRequest.yaml' } ]
+required: [ id, status ]
+properties:
+  id: { type: integer, format: int64 }
+  status: { $ref: './ServiceStatus.yaml' }
+  statusLabel: { type: string, description: 'Status legível em português' }
+  neededSupplies: { type: array, items: { $ref: './NeededSupplyData.yaml' } }
+  createdAt: { type: string, format: date-time }
+  updatedAt: { type: string, format: date-time }
+  rejectedAt: { type: string, format: date-time }
+  cancelledAt: { type: string, format: date-time }
+  approvedAt: { type: string, format: date-time }
+  startedAt: { type: string, format: date-time }
+  completedAt: { type: string, format: date-time }

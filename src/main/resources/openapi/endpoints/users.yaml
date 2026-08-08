@@ -1,0 +1,88 @@
+get:
+  tags: [ Users ]
+  summary: Listar usuários (paginado)
+  operationId: listUsers
+  security:
+    - SessionToken: [ ]
+  parameters:
+    - in: query
+      name: id
+      description: Id do usuário
+      schema: { type: integer, format: int64 }
+    - in: query
+      name: username
+      description: Nome de usuário (login)
+      schema: { type: string }
+    - in: query
+      name: pageSize
+      description: Tamanho da página
+      schema: { type: integer, default: 10 }
+    - in: query
+      name: cursor
+      description: Cursor da paginação (obtido através da página anterior)
+      schema: { type: string }
+  responses:
+    '200':
+      description: Busca paginada
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/PaginatedUserResponse.yaml'
+    '204':
+      description: Sem resultados
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+
+post:
+  tags: [ Users ]
+  summary: Criar novo usuário
+  operationId: createUser
+  security:
+    - SessionToken: [ ]
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/UserRequest.yaml'
+  responses:
+    '201':
+      description: Usuário criado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/UserData.yaml'
+    '400':
+      description: Inválido
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '409':
+      description: Conflito
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'

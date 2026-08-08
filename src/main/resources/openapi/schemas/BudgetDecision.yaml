@@ -1,0 +1,7 @@
+title: Decisão do cliente em relação ao orçamento enviado
+type: string
+enum:
+  - APPROVE
+  - CANCEL
+  - REJECT
+  - PARTIALLY_REJECT

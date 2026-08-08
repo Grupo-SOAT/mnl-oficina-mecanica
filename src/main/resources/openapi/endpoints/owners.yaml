@@ -1,0 +1,82 @@
+get:
+  tags: [ Owners ]
+  summary: Listar clientes (paginado)
+  operationId: listOwners
+  security:
+    - SessionToken: [ ]
+  parameters:
+    - in: query
+      name: document
+      schema: { type: string }
+    - in: query
+      name: pageSize
+      schema: { type: integer, default: 10 }
+    - in: query
+      name: cursor
+      schema: { type: string }
+  responses:
+    '200':
+      description: Lista de clientes
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/PaginatedOwnerResponse.yaml'
+    '204':
+      description: Sem resultados
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+
+post:
+  tags: [ Owners ]
+  summary: Criar novo cliente
+  operationId: createOwner
+  security:
+    - SessionToken: [ ]
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/OwnerRequest.yaml'
+  responses:
+    '201':
+      description: Cliente criado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/OwnerData.yaml'
+    '400':
+      description: Inválido
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '409':
+      description: Conflito
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+

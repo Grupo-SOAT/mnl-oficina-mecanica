@@ -1,0 +1,10 @@
+title: Request de insumo
+description: Dados para criar ou atualizar um insumo
+type: object
+required: [ sku, name, description, unitPrice ]
+properties:
+  sku: { type: string }
+  name: { type: string }
+  description: { type: string }
+  unitPrice: { type: number, format: decimal }
+  suppliedBy: { type: integer, format: int64 }

@@ -1,0 +1,38 @@
+get:
+  tags: [ Reports ]
+  summary: Pedido de Compra de Insumos
+  operationId: getPurchaseOrder
+  security:
+    - SessionToken: [ ]
+  parameters:
+    - in: path
+      name: id
+      description: ID do Pedido
+      required: true
+      schema: { type: integer, format: int64 }
+  responses:
+    '200':
+      description: Pedido de Compra de Insumos
+      content:
+        application/pdf:
+          schema:
+            type: string
+            format: binary
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '404':
+      description: Não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'

@@ -1,0 +1,90 @@
+get:
+  tags: [ Purchase Orders ]
+  summary: Listar pedidos de compra (paginado)
+  operationId: listPurchaseOrders
+  security:
+    - SessionToken: [ ]
+  parameters:
+    - in: query
+      name: supplierId
+      description: ID do fornecedor
+      schema: { type: integer, format: int64 }
+    - in: query
+      name: supplierDocument
+      description: Documento do fornecedor
+      schema: { type: string }
+    - in: query
+      name: sku
+      description: SKU do Insumo
+      schema: { type: string }
+    - in: query
+      name: status
+      description: Status do Pedido
+      schema: { $ref: '../schemas/PurchaseOrderStatus.yaml' }
+    - in: query
+      name: pageSize
+      description: Tamanho da página
+      schema: { type: integer, default: 10 }
+    - in: query
+      name: cursor
+      description: Cursor da paginação (obtido através da página anterior)
+      schema: { type: string }
+  responses:
+    '200':
+      description: Lista de pedidos de compra
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/PaginatedPurchaseOrderResponse.yaml'
+    '204':
+      description: Sem resultados
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+
+post:
+  tags: [ Purchase Orders ]
+  summary: Criar novo pedido de compra
+  operationId: createPurchaseOrder
+  security:
+    - SessionToken: [ ]
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/PurchaseOrderRequest.yaml'
+  responses:
+    '201':
+      description: Pedido de compra criado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/PurchaseOrderData.yaml'
+    '400':
+      description: Inválido
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'

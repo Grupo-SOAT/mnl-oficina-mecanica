@@ -1,0 +1,10 @@
+title: Request de cliente
+description: Dados para criar ou atualizar um cliente
+type: object
+required: [ name, document, documentType, phone, email ]
+properties:
+  name: { type: string }
+  document: { type: string }
+  documentType: { $ref: './DocumentType.yaml' }
+  phone: { type: string }
+  email: { type: string }

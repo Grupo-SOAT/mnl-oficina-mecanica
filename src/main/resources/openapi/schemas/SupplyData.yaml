@@ -1,0 +1,9 @@
+title: Dados do insumo
+description: Informações de um insumo/material/peça
+type: object
+allOf: [ { $ref: './SupplyRequest.yaml' } ]
+required: [ id, reservedQuantity, availableQuantity ]
+properties:
+  id: { type: integer, format: int64 }
+  reservedQuantity: { type: integer }
+  availableQuantity: { type: integer }

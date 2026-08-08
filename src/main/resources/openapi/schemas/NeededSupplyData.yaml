@@ -1,0 +1,8 @@
+title: Dados do insumo
+description: Informações de um insumo/material/peça a ser usado em um serviço
+type: object
+required: [ idSupply, quantity ]
+properties:
+  idSupply: { type: integer, format: int64 }
+  note: { type: string }
+  quantity: { type: integer }

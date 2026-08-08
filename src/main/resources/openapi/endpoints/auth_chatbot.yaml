@@ -1,0 +1,22 @@
+post:
+  tags: [ Authentication ]
+  summary: Login com API Key (chatbot)
+  operationId: authenticatedWithApiKey
+  parameters:
+    - in: header
+      name: X-API-Key
+      required: true
+      schema: { type: string }
+  responses:
+    '200':
+      description: Login bem-sucedido
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/TokenResponse.yaml'
+    '400':
+      description: Inválido
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'

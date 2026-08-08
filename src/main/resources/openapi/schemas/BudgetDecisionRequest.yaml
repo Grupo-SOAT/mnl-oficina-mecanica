@@ -1,0 +1,10 @@
+title: Decisão do cliente em relação ao orçamento enviado
+type: object
+required: [ decision ]
+properties:
+  decision: { $ref: './BudgetDecision.yaml' }
+  comment: { type: string }
+  rejectedServiceIds:
+    type: array
+    items: { type: integer, format: int64 }
+    description: Serviços rejeitados pelo cliente (preenchido apenas quando "parcialmente rejeitado")

@@ -1,0 +1,5 @@
+title: Tipo do documento
+type: string
+enum:
+  - CPF
+  - CNPJ
