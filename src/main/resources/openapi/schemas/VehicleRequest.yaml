@@ -1,0 +1,11 @@
+title: Request de veículo
+description: Dados para criar ou atualizar um veículo (`ownerId` sempre tem prioridade sobre `owner`)
+type: object
+required: [ licensePlate, ownerId, brand, model, year, color ]
+properties:
+  licensePlate: { type: string }
+  ownerId: { type: integer, format: int64 }
+  brand: { type: string }
+  model: { type: string }
+  year: { type: integer }
+  color: { type: string }

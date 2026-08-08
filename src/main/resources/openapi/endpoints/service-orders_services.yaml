@@ -1,0 +1,118 @@
+get:
+  tags: [ Services ]
+  summary: Listar serviços de uma OS (paginado)
+  operationId: listServices
+  security:
+    - SessionToken: [ ]
+
+  parameters:
+    - in: path
+      name: id
+      description: ID da OS
+      required: true
+      schema:
+        type: integer
+        format: int64
+
+    - in: query
+      name: serviceId
+      description: ID do Serviço
+      schema:
+        type: integer
+        format: int64
+
+    - in: query
+      name: status
+      description: Status do Serviço
+      schema:
+        $ref: '../schemas/ServiceStatus.yaml'
+
+    - in: query
+      name: pageSize
+      description: Tamanho da página
+      schema:
+        type: integer
+        default: 10
+
+    - in: query
+      name: cursor
+      description: Cursor da paginação (obtido através da página anterior)
+      schema:
+        type: string
+
+  responses:
+    '200':
+      description: Busca paginada
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/PaginatedServiceResponse.yaml'
+
+    '204':
+      description: Sem resultados
+
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+
+post:
+  tags: [ Services ]
+  summary: Incluir novo Serviço na OS
+  operationId: includeService
+  security:
+    - SessionToken: [ ]
+
+  parameters:
+    - in: path
+      name: id
+      description: ID da OS
+      required: true
+      schema:
+        type: integer
+        format: int64
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/ServiceRequest.yaml'
+
+  responses:
+    '201':
+      description: OS criada
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ServiceData.yaml'
+
+    '400':
+      description: Inválido
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'

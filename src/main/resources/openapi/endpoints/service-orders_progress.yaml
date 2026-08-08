@@ -1,0 +1,44 @@
+post:
+  tags: [ Service Orders ]
+  summary: Registrar Ação sobre uma OS
+  operationId: registerProgress
+  security:
+    - SessionToken: [ ]
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema: { type: integer, format: int64 }
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/ServiceOrderActionRequest.yaml'
+  responses:
+    '202':
+      description: Aceito
+    '400':
+      description: Inválido
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '404':
+      description: Não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'

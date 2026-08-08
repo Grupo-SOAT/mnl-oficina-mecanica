@@ -1,0 +1,37 @@
+post:
+  tags: [ Service Orders ]
+  summary: Criar nova Ordem de Serviço em Cascata
+  operationId: createServiceOrderCascade
+  security:
+    - SessionToken: [ ]
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/ServiceOrderCascadeRequest.yaml'
+  responses:
+    '201':
+      description: OS criada
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ServiceOrderData.yaml'
+    '400':
+      description: Inválido
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'

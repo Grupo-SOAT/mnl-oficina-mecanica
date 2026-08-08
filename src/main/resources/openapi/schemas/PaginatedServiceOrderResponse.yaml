@@ -1,0 +1,9 @@
+title: Lista de OSs
+type: object
+allOf: [ { $ref: './PaginatedResponse.yaml' } ]
+required: [ data ]
+properties:
+  data:
+    type: array
+    items:
+      $ref: './ServiceOrderData.yaml'

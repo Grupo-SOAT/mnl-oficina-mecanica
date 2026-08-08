@@ -1,0 +1,7 @@
+title: Ação a ser processada sobre uma ordem de Serviço
+type: object
+required: [ action ]
+properties:
+  action: { $ref: './ServiceOrderAction.yaml' }
+  additionalInfo: { type: string }
+  relatedServiceId: { type: integer, format: int64 }

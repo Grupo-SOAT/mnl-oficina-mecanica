@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 810 220" role="img" aria-labelledby="title desc">
+  <title id="title">Logo Oficina Mecânica</title>
+  <desc id="desc">Logo simples com engrenagem e o texto Oficina Mecânica.</desc>
+
+  <defs>
+    <linearGradient id="gearGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3f3f46"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(78 32)">
+    <g transform="translate(80 78)">
+      <g fill="url(#gearGradient)">
+        <rect x="-14" y="-62" width="28" height="32" rx="6"/>
+        <rect x="-14" y="30" width="28" height="32" rx="6"/>
+        <rect x="-62" y="-14" width="32" height="28" rx="6"/>
+        <rect x="30" y="-14" width="32" height="28" rx="6"/>
+
+        <rect x="-13" y="-62" width="26" height="32" rx="6" transform="rotate(45)"/>
+        <rect x="-13" y="-62" width="26" height="32" rx="6" transform="rotate(90)"/>
+        <rect x="-13" y="-62" width="26" height="32" rx="6" transform="rotate(135)"/>
+        <rect x="-13" y="-62" width="26" height="32" rx="6" transform="rotate(180)"/>
+        <rect x="-13" y="-62" width="26" height="32" rx="6" transform="rotate(225)"/>
+        <rect x="-13" y="-62" width="26" height="32" rx="6" transform="rotate(270)"/>
+        <rect x="-13" y="-62" width="26" height="32" rx="6" transform="rotate(315)"/>
+      </g>
+
+      <circle r="54" fill="url(#gearGradient)"/>
+      <circle r="28" fill="#ffffff"/>
+      <circle r="16" fill="url(#accentGradient)"/>
+      <path d="M-8 -54 L8 -54 L0 -74 Z" fill="url(#accentGradient)" opacity="0.95"/>
+    </g>
+  </g>
+
+  <g transform="translate(240 72)">
+    <text x="0" y="42" fill="#111827" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="800" letter-spacing="1.2">
+      OFICINA MECÂNICA
+    </text>
+    <rect x="0" y="62" width="332" height="6" rx="3" fill="url(#accentGradient)"/>
+    <text x="0" y="104" fill="#4b5563" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="600" letter-spacing="3.4">
+      GESTÃO INTELIGENTE DE SERVIÇOS
+    </text>
+  </g>
+</svg>

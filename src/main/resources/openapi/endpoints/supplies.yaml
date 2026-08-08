@@ -1,0 +1,85 @@
+get:
+  tags: [ Supplies ]
+  summary: Listar insumos (paginado)
+  operationId: listSupplies
+  security:
+    - SessionToken: [ ]
+  parameters:
+    - in: query
+      name: sku
+      description: Stock Keeping Unit (SKU)
+      schema: { type: string }
+    - in: query
+      name: pageSize
+      description: Tamanho da página
+      schema: { type: integer, default: 10 }
+    - in: query
+      name: cursor
+      description: Cursor da paginação (obtido através da página anterior)
+      schema: { type: string }
+  responses:
+    '200':
+      description: Lista de insumos
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/PaginatedSupplyResponse.yaml'
+    '204':
+      description: Sem resultados
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+
+post:
+  tags: [ Supplies ]
+  summary: Criar novo insumo
+  operationId: createSupply
+  security:
+    - SessionToken: [ ]
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/SupplyRequest.yaml'
+  responses:
+    '201':
+      description: Insumo criado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/SupplyData.yaml'
+    '400':
+      description: Inválido
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '409':
+      description: Conflito
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+

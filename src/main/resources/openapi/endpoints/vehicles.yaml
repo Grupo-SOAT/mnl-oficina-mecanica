@@ -1,0 +1,84 @@
+get:
+  tags: [ Vehicles ]
+  summary: Listar veículos (paginado)
+  operationId: listVehicles
+  security:
+    - SessionToken: [ ]
+  parameters:
+    - in: query
+      name: licensePlate
+      description: Placa do veículo
+      schema: { type: string }
+    - in: query
+      name: pageSize
+      description: Tamanho da página
+      schema: { type: integer, default: 10 }
+    - in: query
+      name: cursor
+      description: Cursor da paginação (obtido através da página anterior)
+      schema: { type: string }
+  responses:
+    '200':
+      description: Lista de veículos
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/PaginatedVehicleResponse.yaml'
+    '204':
+      description: Sem resultados
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+
+post:
+  tags: [ Vehicles ]
+  summary: Criar novo veículo
+  operationId: createVehicle
+  security:
+    - SessionToken: [ ]
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/VehicleRequest.yaml'
+  responses:
+    '201':
+      description: Veículo criado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/VehicleData.yaml'
+    '400':
+      description: Inválido
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '409':
+      description: Conflito
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'

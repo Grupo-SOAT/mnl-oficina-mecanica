@@ -1,0 +1,7 @@
+title: Dados do serviço
+description: Informações de um serviço oferecido
+type: object
+allOf: [ { $ref: './CatalogServiceRequest.yaml' } ]
+required: [ id ]
+properties:
+  id: { type: integer, format: int64 }

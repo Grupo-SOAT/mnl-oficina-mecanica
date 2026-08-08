@@ -1,0 +1,8 @@
+title: Request de Ordem de Serviço
+description: Dados para criar uma Ordem de Serviço
+type: object
+required: [ clientId, vehicleId ]
+properties:
+  clientId: { type: integer, format: int64 }
+  vehicleId: { type: integer, format: int64 }
+  description: { type: string }

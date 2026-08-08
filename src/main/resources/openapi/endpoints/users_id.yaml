@@ -1,0 +1,124 @@
+get:
+  tags: [ Users ]
+  summary: Obter usuário por ID
+  operationId: getUserById
+  security:
+    - SessionToken: [ ]
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema: { type: integer, format: int64 }
+  responses:
+    '200':
+      description: Recurso
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/UserData.yaml'
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '404':
+      description: Não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+
+patch:
+  tags: [ Users ]
+  summary: Atualizar usuário
+  operationId: updateUser
+  security:
+    - SessionToken: [ ]
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema: { type: integer, format: int64 }
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/UserData.yaml'
+  responses:
+    '200':
+      description: Recurso
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/UserData.yaml'
+    '400':
+      description: Inválido
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '404':
+      description: Não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '409':
+      description: Conflito
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+
+delete:
+  tags: [ Users ]
+  summary: Deletar usuário
+  operationId: deleteUser
+  security:
+    - SessionToken: [ ]
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema: { type: integer, format: int64 }
+  responses:
+    '202':
+      description: Aceito
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '404':
+      description: Não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'

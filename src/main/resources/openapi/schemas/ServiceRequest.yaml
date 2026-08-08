@@ -1,0 +1,9 @@
+title: Dados do serviço
+description: Informações de um serviço oferecido
+type: object
+required: [ serviceOrderId, catalogServiceId, price ]
+properties:
+  serviceOrderId: { type: integer, format: int64 }
+  catalogServiceId: { type: integer, format: int64 }
+  price: { type: number, format: decimal }
+  neededSupplies: { type: array, items: { $ref: './NeededSupplyData.yaml' } }

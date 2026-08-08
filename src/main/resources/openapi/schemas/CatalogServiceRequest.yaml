@@ -1,0 +1,9 @@
+title: Request de serviço
+description: Dados para criar ou atualizar um serviço
+type: object
+required: [ name, description, basePrice, neededSupplies ]
+properties:
+  name: { type: string }
+  description: { type: string }
+  basePrice: { type: number, format: decimal }
+  neededSupplies: { type: array, items: { $ref: './NeededSupplyData.yaml' } }

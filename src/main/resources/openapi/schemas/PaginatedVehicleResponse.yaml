@@ -1,0 +1,9 @@
+title: Lista de veículos
+type: object
+allOf: [ { $ref: './PaginatedResponse.yaml' } ]
+required: [ data ]
+properties:
+  data:
+    type: array
+    items:
+      $ref: './VehicleData.yaml'

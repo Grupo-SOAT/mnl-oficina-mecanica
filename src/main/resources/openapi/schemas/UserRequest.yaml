@@ -1,0 +1,7 @@
+title: Dados do usuário
+description: Informações de um usuário
+type: object
+required: [ username, roles ]
+properties:
+  username: { type: string }
+  roles: { type: array, items: { $ref: './Role.yaml' }, minItems: 1 }

@@ -1,0 +1,15 @@
+title: Dados de um pedido de compra
+description: Detalhes de um pedido de compra de insumos
+type: object
+allOf: [ { $ref: './PurchaseOrderRequest.yaml' } ]
+required: [ id, status ]
+properties:
+  id: { type: integer, format: int64 }
+  status: { $ref: './PurchaseOrderStatus.yaml' }
+  estimatedAmount: { type: number, format: decimal }
+  createdAt: { type: string, format: date-time }
+  updatedAt: { type: string, format: date-time }
+  confirmedAt: { type: string, format: date-time }
+  cancelledAt: { type: string, format: date-time }
+  dispatchedAt: { type: string, format: date-time }
+  completedAt: { type: string, format: date-time }

@@ -1,0 +1,82 @@
+get:
+  tags: [ Catalog Services ]
+  summary: Listar serviços catalogados (paginado)
+  operationId: listCatalogServices
+  security:
+    - SessionToken: [ ]
+  parameters:
+    - in: query
+      name: id
+      description: ID do Serviço
+      schema: { type: integer, format: int64 }
+    - in: query
+      name: name
+      description: Início do nome do Serviço
+      schema: { type: string }
+    - in: query
+      name: pageSize
+      description: Tamanho da página
+      schema: { type: integer, default: 10 }
+    - in: query
+      name: cursor
+      description: Cursor da paginação (obtido através da página anterior)
+      schema: { type: string }
+  responses:
+    '200':
+      description: Lista de serviços
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/PaginatedCatalogServiceResponse.yaml'
+    '204':
+      description: Sem resultados
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+
+post:
+  tags: [ Catalog Services ]
+  summary: Criar novo serviço catalogado
+  operationId: createCatalogService
+  security:
+    - SessionToken: [ ]
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/CatalogServiceRequest.yaml'
+  responses:
+    '201':
+      description: Serviço criado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/CatalogServiceData.yaml'
+    '400':
+      description: Inválido
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'

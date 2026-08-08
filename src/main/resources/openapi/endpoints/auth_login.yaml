@@ -1,0 +1,23 @@
+post:
+  tags: [ Authentication ]
+  summary: Login com usuário e senha
+  operationId: authenticate
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/LoginRequest.yaml'
+  responses:
+    '200':
+      description: Login bem-sucedido
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/TokenResponse.yaml'
+    '400':
+      description: Inválido
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'

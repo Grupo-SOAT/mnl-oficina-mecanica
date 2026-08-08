@@ -1,0 +1,7 @@
+title: Dados do fornecedor
+description: Informações de um fornecedor
+type: object
+allOf: [ { $ref: './SupplierRequest.yaml' } ]
+required: [ id ]
+properties:
+  id: { type: integer, format: int64 }

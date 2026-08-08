@@ -1,0 +1,10 @@
+title: Request de fornecedor
+description: Dados para criar ou atualizar um fornecedor
+type: object
+required: [ name, document, contactPerson, email, phone ]
+properties:
+  name: { type: string }
+  document: { type: string }
+  contactPerson: { type: string }
+  email: { type: string }
+  phone: { type: string }

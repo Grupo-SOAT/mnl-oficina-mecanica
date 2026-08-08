@@ -1,0 +1,9 @@
+title: Função do usuário
+description: Denota o nível de acesso do usuário logado
+type: string
+enum:
+  - ADMIN
+  - CHATBOT
+  - MECHANIC
+  - ATTENDANT
+  - STOREKEEPER

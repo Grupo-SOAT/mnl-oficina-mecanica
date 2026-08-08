@@ -1,0 +1,8 @@
+title: Dados do insumo
+description: Informações de um insumo/material/peça a ser comprado
+type: object
+required: [ supplyId, quotedUnitPrice, requestedQuantity ]
+properties:
+  supplyId: { type: integer, format: int64 }
+  quotedUnitPrice: { type: number, format: decimal }
+  requestedQuantity: { type: integer }

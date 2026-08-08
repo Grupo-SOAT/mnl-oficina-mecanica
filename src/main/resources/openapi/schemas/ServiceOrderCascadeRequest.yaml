@@ -1,0 +1,12 @@
+title: Request de Ordem de Serviço com criação em cascata
+description: Dados para criar uma Ordem de Serviço e suas entidades associadas em cascata
+type: object
+required: [ ]
+properties:
+  ownerId: { type: integer, format: int64 }
+  vehicle: { $ref: './VehicleCascadeRequest.yaml' }
+  vehicleId: { type: integer, format: int64 }
+  description: { type: string }
+  catalogServiceIds:
+    type: array
+    items: { type: integer, format: int64 }

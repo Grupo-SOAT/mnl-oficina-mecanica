@@ -1,0 +1,130 @@
+get:
+  tags: [ Services ]
+  summary: Obter Serviço da OS por ID
+  operationId: getServiceById
+  security:
+    - SessionToken: [ ]
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema: { type: integer, format: int64 }
+    - in: path
+      name: serviceId
+      required: true
+      schema: { type: integer, format: int64 }
+  responses:
+    '200':
+      description: Recurso
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ServiceData.yaml'
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '404':
+      description: Não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+
+patch:
+  tags: [ Services ]
+  summary: Atualizar Serviço da OS
+  operationId: updateService
+  security:
+    - SessionToken: [ ]
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema: { type: integer, format: int64 }
+    - in: path
+      name: serviceId
+      required: true
+      schema: { type: integer, format: int64 }
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/ServiceData.yaml'
+  responses:
+    '200':
+      description: Recurso
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ServiceData.yaml'
+    '400':
+      description: Inválido
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '404':
+      description: Não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+
+delete:
+  tags: [ Services ]
+  summary: Deletar Serviço da OS
+  operationId: deleteService
+  security:
+    - SessionToken: [ ]
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema: { type: integer, format: int64 }
+    - in: path
+      name: serviceId
+      required: true
+      schema: { type: integer, format: int64 }
+  responses:
+    '202':
+      description: Aceito
+    '401':
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '403':
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'
+    '404':
+      description: Não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yaml'

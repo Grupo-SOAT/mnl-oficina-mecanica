@@ -1,0 +1,9 @@
+title: Login
+description: Dados de login de um usuário humano
+type: object
+required: [ username, password ]
+properties:
+  username:
+    type: string
+  password:
+    type: string
