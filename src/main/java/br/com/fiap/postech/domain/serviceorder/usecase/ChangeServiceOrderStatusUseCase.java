@@ -13,9 +13,18 @@ import br.com.fiap.postech.port.persistence.service.ServicePersistencePort;
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderPersistencePort;
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderStatusLabelPort;
 
+import net.logstash.logback.argument.StructuredArguments;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
 import java.time.LocalDateTime;
 
+import static br.com.fiap.postech.domain.serviceorder.model.ServiceOrderStatus.*;
+
 public class ChangeServiceOrderStatusUseCase {
+
+    private static final Logger logger = LoggerFactory.getLogger(ChangeServiceOrderStatusUseCase.class);
 
     private final ServiceOrderPersistencePort serviceOrderPersistencePort;
     private final ServicePersistencePort servicePersistencePort;
@@ -85,7 +94,7 @@ public class ChangeServiceOrderStatusUseCase {
         switch (action) {
             case START_SERVICE -> {
                 changeServiceStatusUseCase.startService(serviceOrder.getId(), relatedServiceId);
-                updateServiceOrderIfNeeded(serviceOrder, ServiceOrderStatus.IN_PROGRESS);
+                updateServiceOrderToInProgressIfNeeded(serviceOrder);
             }
             case COMPLETE_SERVICE -> {
                 changeServiceStatusUseCase.completeService(serviceOrder.getId(), relatedServiceId);
@@ -102,19 +111,19 @@ public class ChangeServiceOrderStatusUseCase {
         }
     }
 
-    private void updateServiceOrderIfNeeded(ServiceOrder serviceOrder, ServiceOrderStatus targetStatus) {
-        if (!"IN_PROGRESS".equals(serviceOrder.getStatus())) {
-            applyStatusTransition(serviceOrder, targetStatus);
+    private void updateServiceOrderToInProgressIfNeeded(ServiceOrder serviceOrder) {
+        if (!IN_PROGRESS.name().equals(serviceOrder.getStatus())) {
+            applyStatusTransition(serviceOrder, ServiceOrderStatus.IN_PROGRESS);
         }
     }
 
     private void checkAndUpdateToCompleted(ServiceOrder serviceOrder) {
         final var services = servicePersistencePort.findAllByServiceOrderId(serviceOrder.getId());
         boolean allCompleted = services.stream()
-                .allMatch(s -> "COMPLETED".equals(s.getStatus()));
+                .allMatch(s -> COMPLETED.name().equals(s.getStatus()));
 
-        if (allCompleted && !"COMPLETED".equals(serviceOrder.getStatus())) {
-            applyStatusTransition(serviceOrder, ServiceOrderStatus.COMPLETED);
+        if (allCompleted && !COMPLETED.name().equals(serviceOrder.getStatus())) {
+            applyStatusTransition(serviceOrder, COMPLETED);
         }
     }
 
@@ -148,8 +157,8 @@ public class ChangeServiceOrderStatusUseCase {
             case START_INSPECTION -> ServiceOrderStatus.IN_INSPECTION;
             case COMPLETE_INSPECTION -> ServiceOrderStatus.AWAITING_APPROVAL;
             case DELIVER_VEHICLE -> ServiceOrderStatus.DELIVERED;
-            case START_SERVICE -> ServiceOrderStatus.IN_PROGRESS;
-            case COMPLETE_SERVICE -> ServiceOrderStatus.COMPLETED;
+            case START_SERVICE -> IN_PROGRESS;
+            case COMPLETE_SERVICE -> COMPLETED;
             case CANCEL_SERVICE -> ServiceOrderStatus.CANCELLED;
         };
     }
@@ -164,6 +173,12 @@ public class ChangeServiceOrderStatusUseCase {
 
     private void applyStatusTransition(ServiceOrder serviceOrder, ServiceOrderStatus targetStatus) {
         final var now = LocalDateTime.now();
+        final var from = serviceOrder.getStatus();
+        final var enteredAt = serviceOrder.getUpdatedAt();
+        final var durationSecs = enteredAt == null
+                ? 0L
+                : Duration.between(enteredAt, now).toSeconds();
+
         serviceOrder.setStatus(targetStatus.name());
         serviceOrder.setStatusLabel(statusLabelPort.resolve(targetStatus.name()));
         serviceOrder.setUpdatedAt(now);
@@ -179,6 +194,12 @@ public class ChangeServiceOrderStatusUseCase {
             default -> {
             }
         }
+
+        logger.info("service_order status transitioned",
+                StructuredArguments.keyValue("so_id", serviceOrder.getId()),
+                StructuredArguments.keyValue("from_status", from),
+                StructuredArguments.keyValue("to_status", targetStatus.name()),
+                StructuredArguments.keyValue("duration_in_status_seconds", durationSecs));
     }
 
     /**
@@ -192,13 +213,13 @@ public class ChangeServiceOrderStatusUseCase {
             final var now = LocalDateTime.now();
 
             for (Service service : services) {
-                if ("AWAITING_APPROVAL".equals(service.getStatus())) {
+                if (AWAITING_APPROVAL.name().equals(service.getStatus())) {
                     service.setStatus(targetStatus.name());
                     service.setUpdatedAt(now);
 
                     if (targetStatus == ServiceOrderStatus.APPROVED) {
                         service.setApprovedAt(now);
-                    } else if (targetStatus == ServiceOrderStatus.CANCELLED) {
+                    } else {
                         service.setCancelledAt(now);
                     }
 

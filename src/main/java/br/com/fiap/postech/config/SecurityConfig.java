@@ -23,6 +23,7 @@ public class SecurityConfig {
 
     private final RoleAuthorizationFilter roleAuthorizationFilter;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final MdcUserFilter mdcUserFilter;
     private final Environment environment;
 
     @Bean
@@ -86,6 +87,9 @@ public class SecurityConfig {
 
                 // depois autorização
                 .addFilterAfter(roleAuthorizationFilter, JwtAuthenticationFilter.class)
+
+                // correlaciona user_id no MDC apos autenticacao
+                .addFilterAfter(mdcUserFilter, JwtAuthenticationFilter.class)
 
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable);
