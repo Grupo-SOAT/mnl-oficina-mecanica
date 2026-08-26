@@ -12,7 +12,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
@@ -33,9 +32,7 @@ class MicrometerServiceOrderMetricsAdapterTest {
     void should_increment_created_counter_tagged_by_today_date() {
         adapter.recordServiceOrderCreated(10L);
 
-        var counter = meterRegistry.get("service_order.created")
-                .tag("date", LocalDate.now().toString())
-                .counter();
+        var counter = meterRegistry.get("service_order.created").counter();
         assertThat(counter.count()).isEqualTo(1);
     }
 

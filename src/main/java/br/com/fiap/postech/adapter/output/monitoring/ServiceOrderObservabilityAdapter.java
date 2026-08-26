@@ -20,11 +20,15 @@ public class ServiceOrderObservabilityAdapter implements ServiceOrderObservabili
     private static final Logger logger = LoggerFactory.getLogger(ServiceOrderObservabilityAdapter.class);
 
     private final MeterRegistry meterRegistry;
+    private final Counter serviceOrderCreatedCounter;
     private final Counter budgetDecisionFailureCounter;
     private final Counter budgetApprovalPublishFailureCounter;
 
     public ServiceOrderObservabilityAdapter(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
+        this.serviceOrderCreatedCounter = Counter.builder("service_order.created")
+                .description("Service orders created")
+                .register(meterRegistry);
         this.budgetDecisionFailureCounter = Counter.builder("budget_decision.processing.failures")
                 .description("Failed budget decision processing")
                 .register(meterRegistry);
@@ -36,11 +40,7 @@ public class ServiceOrderObservabilityAdapter implements ServiceOrderObservabili
     @Override
     public void recordServiceOrderCreated(Long soId) {
         String date = LocalDate.now().toString();
-        Counter.builder("service_order.created")
-                .description("Service orders created")
-                .tag("date", date)
-                .register(meterRegistry)
-                .increment();
+        serviceOrderCreatedCounter.increment();
         logger.info("service_order created",
                 StructuredArguments.keyValue("so_id", soId),
                 StructuredArguments.keyValue("date", date));

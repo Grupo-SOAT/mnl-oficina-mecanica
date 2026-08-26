@@ -7,6 +7,7 @@ import br.com.fiap.postech.domain.service.exception.NegativeSupplyQuantityExcept
 import br.com.fiap.postech.domain.service.exception.ServiceNotFoundException;
 import br.com.fiap.postech.domain.serviceorder.model.ServiceOrderStatus;
 import br.com.fiap.postech.port.persistence.service.ServicePersistencePort;
+import br.com.fiap.postech.port.persistence.service.ServiceStatusLabelPort;
 import br.com.fiap.postech.port.persistence.supply.SupplyPersistencePort;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +32,9 @@ class ChangeServiceStatusUseCaseTest {
 
     @Mock
     private SupplyPersistencePort supplyPersistencePort;
+
+    @Mock
+    private ServiceStatusLabelPort statusLabelPort;
 
     @InjectMocks
     private ChangeServiceStatusUseCase useCase;

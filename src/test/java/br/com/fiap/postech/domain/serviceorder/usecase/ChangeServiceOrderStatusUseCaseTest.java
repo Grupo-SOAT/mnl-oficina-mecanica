@@ -12,6 +12,7 @@ import br.com.fiap.postech.domain.serviceorder.model.ServiceOrderStatusChanged;
 import br.com.fiap.postech.port.monitoring.ServiceOrderObservabilityPort;
 import br.com.fiap.postech.port.persistence.service.ServicePersistencePort;
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderPersistencePort;
+import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderStatusLabelPort;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -48,6 +49,9 @@ class ChangeServiceOrderStatusUseCaseTest {
 
     @Mock
     private ServiceOrderObservabilityPort serviceOrderObservabilityPort;
+
+    @Mock
+    private ServiceOrderStatusLabelPort statusLabelPort;
 
     @InjectMocks
     private ChangeServiceOrderStatusUseCase useCase;
@@ -170,7 +174,7 @@ class ChangeServiceOrderStatusUseCaseTest {
                 .serviceOrderId(1L)
                 .status("AWAITING_APPROVAL")
                 .build();
-        
+
         when(serviceOrderPersistencePort.findById(1L)).thenReturn(Optional.of(serviceOrder));
         when(servicePersistencePort.findAllByServiceOrderId(1L)).thenReturn(List.of(service1, service2));
         when(serviceOrderPersistencePort.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -203,7 +207,7 @@ class ChangeServiceOrderStatusUseCaseTest {
                 .serviceOrderId(1L)
                 .status("AWAITING_APPROVAL")
                 .build();
-        
+
         when(serviceOrderPersistencePort.findById(1L)).thenReturn(Optional.of(serviceOrder));
         when(servicePersistencePort.findAllByServiceOrderId(1L)).thenReturn(List.of(service1, service2));
         when(serviceOrderPersistencePort.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -236,7 +240,7 @@ class ChangeServiceOrderStatusUseCaseTest {
                 .serviceOrderId(1L)
                 .status("CANCELLED")
                 .build();
-        
+
         when(serviceOrderPersistencePort.findById(1L)).thenReturn(Optional.of(serviceOrder));
         when(servicePersistencePort.findAllByServiceOrderId(1L)).thenReturn(List.of(approvedService, cancelledService));
         when(serviceOrderPersistencePort.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
