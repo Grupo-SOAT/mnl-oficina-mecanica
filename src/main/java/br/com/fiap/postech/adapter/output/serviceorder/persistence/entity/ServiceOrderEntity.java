@@ -1,25 +1,16 @@
 package br.com.fiap.postech.adapter.output.serviceorder.persistence.entity;
 
 import br.com.fiap.postech.domain.serviceorder.model.ServiceOrder;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -86,6 +77,25 @@ public class ServiceOrderEntity implements ServiceOrder {
 
     @Column(name = "partially_rejected_at")
     private LocalDateTime partiallyRejectedAt;
+
+    @Override
+    public LocalDateTime getLastStatusChangedAt() {
+        final var allStatusChanges = new ArrayList<LocalDateTime>();
+        allStatusChanges.add(getCreatedAt());
+        allStatusChanges.add(getInspectedAt());
+        allStatusChanges.add(getApprovedAt());
+        allStatusChanges.add(getCancelledAt());
+        allStatusChanges.add(getStartedAt());
+        allStatusChanges.add(getCompletedAt());
+        allStatusChanges.add(getRejectedAt());
+        allStatusChanges.add(getDeliveredAt());
+        allStatusChanges.add(getPartiallyRejectedAt());
+
+        return allStatusChanges.stream()
+                .filter(Objects::nonNull)
+                .max(LocalDateTime::compareTo)
+                .orElse(null);
+    }
 
     @Override
     public String toString() {

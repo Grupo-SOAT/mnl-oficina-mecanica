@@ -12,7 +12,6 @@ import br.com.fiap.postech.domain.serviceorder.status.ServiceOrderState;
 import br.com.fiap.postech.port.persistence.service.ServicePersistencePort;
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderPersistencePort;
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderStatusLabelPort;
-
 import net.logstash.logback.argument.StructuredArguments;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,14 +91,16 @@ public class ChangeServiceOrderStatusUseCase {
 
     private void handleServiceAction(ServiceOrderAction action, Long relatedServiceId, ServiceOrder serviceOrder) {
         switch (action) {
-            case START_SERVICE -> {
-                changeServiceStatusUseCase.startService(serviceOrder.getId(), relatedServiceId);
-                updateServiceOrderToInProgressIfNeeded(serviceOrder);
-            }
-            case COMPLETE_SERVICE -> {
-                changeServiceStatusUseCase.completeService(serviceOrder.getId(), relatedServiceId);
-                checkAndUpdateToCompleted(serviceOrder);
-            }
+            case START_SERVICE -> changeServiceStatusUseCase.startService(
+                    serviceOrder.getId(),
+                    relatedServiceId,
+                    targetStatus -> applyStatusTransition(serviceOrder, targetStatus)
+            );
+            case COMPLETE_SERVICE -> changeServiceStatusUseCase.completeService(
+                    serviceOrder.getId(),
+                    relatedServiceId,
+                    targetStatus -> applyStatusTransition(serviceOrder, targetStatus)
+            );
             case CANCEL_SERVICE -> {
                 changeServiceStatusUseCase.cancelService(serviceOrder.getId(), relatedServiceId);
                 applyStatusTransition(serviceOrder, ServiceOrderStatus.CANCELLED);
@@ -108,22 +109,6 @@ public class ChangeServiceOrderStatusUseCase {
                 var targetStatus = resolveProgressTarget(action);
                 applyStatusTransition(serviceOrder, targetStatus);
             }
-        }
-    }
-
-    private void updateServiceOrderToInProgressIfNeeded(ServiceOrder serviceOrder) {
-        if (!IN_PROGRESS.name().equals(serviceOrder.getStatus())) {
-            applyStatusTransition(serviceOrder, ServiceOrderStatus.IN_PROGRESS);
-        }
-    }
-
-    private void checkAndUpdateToCompleted(ServiceOrder serviceOrder) {
-        final var services = servicePersistencePort.findAllByServiceOrderId(serviceOrder.getId());
-        boolean allCompleted = services.stream()
-                .allMatch(s -> COMPLETED.name().equals(s.getStatus()));
-
-        if (allCompleted && !COMPLETED.name().equals(serviceOrder.getStatus())) {
-            applyStatusTransition(serviceOrder, COMPLETED);
         }
     }
 
@@ -174,8 +159,8 @@ public class ChangeServiceOrderStatusUseCase {
     private void applyStatusTransition(ServiceOrder serviceOrder, ServiceOrderStatus targetStatus) {
         final var now = LocalDateTime.now();
         final var from = serviceOrder.getStatus();
-        final var enteredAt = serviceOrder.getUpdatedAt();
-        final var durationSecs = enteredAt == null
+        final var enteredAt = serviceOrder.getLastStatusChangedAt();
+        final var durationInSeconds = enteredAt == null
                 ? 0L
                 : Duration.between(enteredAt, now).toSeconds();
 
@@ -199,7 +184,7 @@ public class ChangeServiceOrderStatusUseCase {
                 StructuredArguments.keyValue("so_id", serviceOrder.getId()),
                 StructuredArguments.keyValue("from_status", from),
                 StructuredArguments.keyValue("to_status", targetStatus.name()),
-                StructuredArguments.keyValue("duration_in_status_seconds", durationSecs));
+                StructuredArguments.keyValue("duration_in_seconds", durationInSeconds));
     }
 
     /**

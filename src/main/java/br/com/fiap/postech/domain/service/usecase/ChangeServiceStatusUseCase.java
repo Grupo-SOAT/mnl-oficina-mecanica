@@ -3,46 +3,41 @@ package br.com.fiap.postech.domain.service.usecase;
 import br.com.fiap.postech.domain.service.exception.NegativeSupplyQuantityException;
 import br.com.fiap.postech.domain.service.exception.ServiceNotFoundException;
 import br.com.fiap.postech.domain.service.model.Service;
+import br.com.fiap.postech.domain.serviceorder.model.ServiceOrderStatus;
 import br.com.fiap.postech.port.persistence.service.ServicePersistencePort;
 import br.com.fiap.postech.port.persistence.service.ServiceStatusLabelPort;
-import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderPersistencePort;
 import br.com.fiap.postech.port.persistence.supply.SupplyPersistencePort;
 
-import net.logstash.logback.argument.StructuredArguments;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.function.Consumer;
 
 import static br.com.fiap.postech.domain.serviceorder.model.ServiceOrderStatus.*;
 
 public class ChangeServiceStatusUseCase {
 
-    private static final Logger logger = LoggerFactory.getLogger(ChangeServiceStatusUseCase.class);
-
     private final ServicePersistencePort servicePersistencePort;
-    private final ServiceOrderPersistencePort serviceOrderPersistencePort;
     private final SupplyPersistencePort supplyPersistencePort;
     private final ServiceStatusLabelPort statusLabelPort;
 
     public ChangeServiceStatusUseCase(
             ServicePersistencePort servicePersistencePort,
-            ServiceOrderPersistencePort serviceOrderPersistencePort,
             SupplyPersistencePort supplyPersistencePort,
             ServiceStatusLabelPort statusLabelPort
     ) {
         this.servicePersistencePort = servicePersistencePort;
-        this.serviceOrderPersistencePort = serviceOrderPersistencePort;
         this.supplyPersistencePort = supplyPersistencePort;
         this.statusLabelPort = statusLabelPort;
     }
 
     /**
-     * Handle START_SERVICE action: mark service as IN_PROGRESS, update OS if first service,
-     * and decrement reserved supplies accordingly.
+     * Handle START_SERVICE action: mark service as IN_PROGRESS, decrement reserved supplies, and
+     * notify the caller to transition the OS to IN_PROGRESS when this is the first service started.
      */
-    public Service startService(Long serviceOrderId, Long serviceId) {
+    public Service startService(
+            Long serviceOrderId,
+            Long serviceId,
+            Consumer<ServiceOrderStatus> onServiceOrderTransition
+    ) {
         final var service = servicePersistencePort.findByIdAndServiceOrderId(serviceId, serviceOrderId)
                 .orElseThrow(() -> new ServiceNotFoundException(serviceId));
 
@@ -70,15 +65,20 @@ public class ChangeServiceStatusUseCase {
         var savedService = servicePersistencePort.save(service);
         savedService.setStatusLabel(statusLabelPort.resolve(savedService.getStatus()));
 
-        updateServiceOrderIfFirstServiceStarted(serviceOrderId, serviceId);
+        updateServiceOrderIfFirstServiceStarted(serviceOrderId, serviceId, onServiceOrderTransition);
 
         return savedService;
     }
 
     /**
-     * Handle COMPLETE_SERVICE action: mark service as COMPLETED and update OS if last service.
+     * Handle COMPLETE_SERVICE action: mark service as COMPLETED and notify the caller to transition
+     * the OS to COMPLETED when all services are done.
      */
-    public Service completeService(Long serviceOrderId, Long serviceId) {
+    public Service completeService(
+            Long serviceOrderId,
+            Long serviceId,
+            Consumer<ServiceOrderStatus> onServiceOrderTransition
+    ) {
         final var service = servicePersistencePort.findByIdAndServiceOrderId(serviceId, serviceOrderId)
                 .orElseThrow(() -> new ServiceNotFoundException(serviceId));
 
@@ -90,7 +90,7 @@ public class ChangeServiceStatusUseCase {
         var savedService = servicePersistencePort.save(service);
         savedService.setStatusLabel(statusLabelPort.resolve(savedService.getStatus()));
 
-        updateServiceOrderIfLastServiceCompleted(serviceOrderId);
+        updateServiceOrderIfLastServiceCompleted(serviceOrderId, onServiceOrderTransition);
 
         return savedService;
     }
@@ -130,45 +130,33 @@ public class ChangeServiceStatusUseCase {
         return saved;
     }
 
-    private void updateServiceOrderIfFirstServiceStarted(Long serviceOrderId, Long currentServiceId) {
-        final var serviceOrder = serviceOrderPersistencePort.findById(serviceOrderId).orElse(null);
-        if (serviceOrder == null || !serviceOrder.getStatus().equals(APPROVED.name())) {
-            return; // OS must be in APPROVED status for service to start
-        }
-
-        // Check if any other service is already IN_PROGRESS (excluding current one)
+    /**
+     * Notifies the caller that the OS should move to IN_PROGRESS when the service being started is
+     * the first one (no other service is already IN_PROGRESS).
+     */
+    private void updateServiceOrderIfFirstServiceStarted(
+            Long serviceOrderId,
+            Long currentServiceId,
+            Consumer<ServiceOrderStatus> onTransition
+    ) {
         final var services = servicePersistencePort.findAllByServiceOrderId(serviceOrderId);
         final var hasOtherInProgressService = services.stream()
                 .filter(s -> !currentServiceId.equals(s.getId()))
                 .anyMatch(s -> IN_PROGRESS.name().equals(s.getStatus()));
 
         if (!hasOtherInProgressService) {
-            final var now = LocalDateTime.now();
-            final var from = serviceOrder.getStatus();
-            final var to = IN_PROGRESS.name();
-            final var enteredAt = serviceOrder.getUpdatedAt();
-            final var durationInSeconds = enteredAt == null
-                    ? 0L
-                    : Duration.between(enteredAt, now).toSeconds();
-
-            serviceOrder.setStatus(to);
-            serviceOrder.setStartedAt(now);
-            serviceOrder.setUpdatedAt(now);
-            serviceOrderPersistencePort.save(serviceOrder);
-
-            logStatusChangeMetric(serviceOrder.getId(), from, to, durationInSeconds);
+            onTransition.accept(IN_PROGRESS);
         }
     }
 
     /**
-     * Update ServiceOrder to COMPLETED if all services are done and none are IN_PROGRESS/APPROVED.
+     * Notifies the caller that the OS should move to COMPLETED when all services are done
+     * (COMPLETED or CANCELLED) and none are IN_PROGRESS/APPROVED.
      */
-    private void updateServiceOrderIfLastServiceCompleted(Long serviceOrderId) {
-        final var serviceOrder = serviceOrderPersistencePort.findById(serviceOrderId).orElse(null);
-        if (serviceOrder == null || !serviceOrder.getStatus().equals(IN_PROGRESS.name())) {
-            return;
-        }
-
+    private void updateServiceOrderIfLastServiceCompleted(
+            Long serviceOrderId,
+            Consumer<ServiceOrderStatus> onTransition
+    ) {
         final var services = servicePersistencePort.findAllByServiceOrderId(serviceOrderId);
 
         // Check if all services are completed or cancelled
@@ -180,28 +168,7 @@ public class ChangeServiceStatusUseCase {
                 .anyMatch(s -> IN_PROGRESS.name().equals(s.getStatus()) || APPROVED.name().equals(s.getStatus()));
 
         if (allDone && !anyInProgress) {
-            final var now = LocalDateTime.now();
-            final var from = serviceOrder.getStatus();
-            final var to = COMPLETED.name();
-            final var enteredAt = serviceOrder.getUpdatedAt();
-            final var durationInSeconds = enteredAt == null
-                    ? 0L
-                    : Duration.between(enteredAt, now).toSeconds();
-
-            serviceOrder.setStatus(to);
-            serviceOrder.setCompletedAt(now);
-            serviceOrder.setUpdatedAt(now);
-            serviceOrderPersistencePort.save(serviceOrder);
-
-            logStatusChangeMetric(serviceOrder.getId(), from, to, durationInSeconds);
+            onTransition.accept(COMPLETED);
         }
-    }
-
-    private void logStatusChangeMetric(Long serviceOrderId, String fromStatus, String toStatus, Long durationInSeconds) {
-        logger.info("service_order status transitioned",
-                StructuredArguments.keyValue("so_id", serviceOrderId),
-                StructuredArguments.keyValue("from_status", fromStatus),
-                StructuredArguments.keyValue("to_status", toStatus),
-                StructuredArguments.keyValue("duration_in_status_seconds", durationInSeconds));
     }
 }

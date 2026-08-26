@@ -1,5 +1,8 @@
 package br.com.fiap.postech.config;
 
+import br.com.fiap.postech.config.security.filter.MdcUserFilter;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -13,9 +16,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -23,7 +23,6 @@ public class SecurityConfig {
 
     private final RoleAuthorizationFilter roleAuthorizationFilter;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final MdcUserFilter mdcUserFilter;
     private final Environment environment;
 
     @Bean
@@ -89,7 +88,7 @@ public class SecurityConfig {
                 .addFilterAfter(roleAuthorizationFilter, JwtAuthenticationFilter.class)
 
                 // correlaciona user_id no MDC apos autenticacao
-                .addFilterAfter(mdcUserFilter, JwtAuthenticationFilter.class)
+                .addFilterAfter(new MdcUserFilter(), JwtAuthenticationFilter.class)
 
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable);

@@ -54,4 +54,6 @@ public interface ServiceOrder {
 
     LocalDateTime getPartiallyRejectedAt();
     void setPartiallyRejectedAt(LocalDateTime partiallyRejectedAt);
+
+    LocalDateTime getLastStatusChangedAt();
 }

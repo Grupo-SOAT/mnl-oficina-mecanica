@@ -64,13 +64,11 @@ public class UseCaseDependencyInjectionConfig {
     @Bean
     public ChangeServiceStatusUseCase changeServiceStatusUseCase(
             ServicePersistencePort servicePersistencePort,
-            ServiceOrderPersistencePort serviceOrderPersistencePort,
             SupplyPersistencePort supplyPersistencePort,
             ServiceStatusLabelPort statusLabelPort
     ) {
         return new ChangeServiceStatusUseCase(
                 servicePersistencePort,
-                serviceOrderPersistencePort,
                 supplyPersistencePort,
                 statusLabelPort
         );

@@ -1,18 +1,15 @@
-package br.com.fiap.postech.config;
-
-import java.io.IOException;
-
-import org.slf4j.MDC;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
+package br.com.fiap.postech.config.security.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.MDC;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.filter.OncePerRequestFilter;
 
-@Component
+import java.io.IOException;
+
 public class MdcUserFilter extends OncePerRequestFilter {
 
     @Override

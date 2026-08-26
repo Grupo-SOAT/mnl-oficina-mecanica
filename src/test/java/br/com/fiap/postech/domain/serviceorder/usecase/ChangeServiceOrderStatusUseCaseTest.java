@@ -4,11 +4,12 @@ import br.com.fiap.postech.adapter.input.api.model.BudgetDecision;
 import br.com.fiap.postech.adapter.input.api.model.ServiceOrderAction;
 import br.com.fiap.postech.adapter.output.service.persistence.entity.ServiceEntity;
 import br.com.fiap.postech.adapter.output.serviceorder.persistence.entity.ServiceOrderEntity;
+import br.com.fiap.postech.domain.service.usecase.ChangeServiceStatusUseCase;
 import br.com.fiap.postech.domain.serviceorder.exception.PartialBudgetRejectionNotImplementedException;
 import br.com.fiap.postech.domain.serviceorder.exception.ServiceOrderNotFoundException;
+import br.com.fiap.postech.domain.serviceorder.model.ServiceOrderStatus;
 import br.com.fiap.postech.port.persistence.service.ServicePersistencePort;
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderPersistencePort;
-import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderStatusLabelPort;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,10 +18,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,13 +36,14 @@ class ChangeServiceOrderStatusUseCaseTest {
     private ServicePersistencePort servicePersistencePort;
 
     @Mock
+    private ChangeServiceStatusUseCase changeServiceStatusUseCase;
+
+    @Mock
     private FinalizeInspectionUseCase finalizeInspectionUseCase;
 
     @Mock
     private EstimateServiceOrderAmountUseCase estimateServiceOrderAmountUseCase;
 
-    @Mock
-    private ServiceOrderStatusLabelPort statusLabelPort;
 
     @InjectMocks
     private ChangeServiceOrderStatusUseCase useCase;
@@ -309,5 +313,85 @@ class ChangeServiceOrderStatusUseCaseTest {
 
         verify(estimateServiceOrderAmountUseCase).estimate(1L);
         verify(finalizeInspectionUseCase).finalizeInspection(1L);
+    }
+
+    @Test
+    void should_transition_os_to_in_progress_when_start_service_reports_first_service() {
+        var serviceOrder = ServiceOrderEntity.builder()
+                .id(1L)
+                .status("APPROVED")
+                .build();
+        when(serviceOrderPersistencePort.findById(1L)).thenReturn(Optional.of(serviceOrder));
+        when(serviceOrderPersistencePort.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(changeServiceStatusUseCase.startService(eq(1L), eq(5L), any()))
+                .thenAnswer(invocation -> {
+                    @SuppressWarnings("unchecked")
+                    Consumer<ServiceOrderStatus> callback = invocation.getArgument(2);
+                    callback.accept(ServiceOrderStatus.IN_PROGRESS);
+                    return null;
+                });
+
+        var updated = useCase.registerProgress(1L, ServiceOrderAction.START_SERVICE, 5L);
+
+        assertThat(updated.getStatus()).isEqualTo("IN_PROGRESS");
+        assertThat(updated.getStartedAt()).isNotNull();
+        verify(serviceOrderPersistencePort).save(serviceOrder);
+    }
+
+    @Test
+    void should_keep_os_status_when_start_service_reports_no_transition() {
+        var serviceOrder = ServiceOrderEntity.builder()
+                .id(1L)
+                .status("APPROVED")
+                .build();
+        when(serviceOrderPersistencePort.findById(1L)).thenReturn(Optional.of(serviceOrder));
+        when(serviceOrderPersistencePort.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(changeServiceStatusUseCase.startService(eq(1L), eq(5L), any())).thenReturn(null);
+
+        var updated = useCase.registerProgress(1L, ServiceOrderAction.START_SERVICE, 5L);
+
+        assertThat(updated.getStatus()).isEqualTo("APPROVED");
+        assertThat(updated.getStartedAt()).isNull();
+        verify(serviceOrderPersistencePort).save(serviceOrder);
+    }
+
+    @Test
+    void should_transition_os_to_completed_when_complete_service_reports_all_done() {
+        var serviceOrder = ServiceOrderEntity.builder()
+                .id(1L)
+                .status("IN_PROGRESS")
+                .build();
+        when(serviceOrderPersistencePort.findById(1L)).thenReturn(Optional.of(serviceOrder));
+        when(serviceOrderPersistencePort.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(changeServiceStatusUseCase.completeService(eq(1L), eq(5L), any()))
+                .thenAnswer(invocation -> {
+                    @SuppressWarnings("unchecked")
+                    Consumer<ServiceOrderStatus> callback = invocation.getArgument(2);
+                    callback.accept(ServiceOrderStatus.COMPLETED);
+                    return null;
+                });
+
+        var updated = useCase.registerProgress(1L, ServiceOrderAction.COMPLETE_SERVICE, 5L);
+
+        assertThat(updated.getStatus()).isEqualTo("COMPLETED");
+        assertThat(updated.getCompletedAt()).isNotNull();
+        verify(serviceOrderPersistencePort).save(serviceOrder);
+    }
+
+    @Test
+    void should_transition_os_to_cancelled_on_cancel_service() {
+        var serviceOrder = ServiceOrderEntity.builder()
+                .id(1L)
+                .status("APPROVED")
+                .build();
+        when(serviceOrderPersistencePort.findById(1L)).thenReturn(Optional.of(serviceOrder));
+        when(serviceOrderPersistencePort.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(changeServiceStatusUseCase.cancelService(eq(1L), eq(5L))).thenReturn(null);
+
+        var updated = useCase.registerProgress(1L, ServiceOrderAction.CANCEL_SERVICE, 5L);
+
+        assertThat(updated.getStatus()).isEqualTo("CANCELLED");
+        assertThat(updated.getCancelledAt()).isNotNull();
+        verify(serviceOrderPersistencePort).save(serviceOrder);
     }
 }
