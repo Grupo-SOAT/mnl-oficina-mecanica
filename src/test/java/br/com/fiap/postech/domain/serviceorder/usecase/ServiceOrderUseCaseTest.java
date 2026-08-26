@@ -10,6 +10,7 @@ import br.com.fiap.postech.domain.serviceorder.exception.ServiceOrderVehicleNotF
 import br.com.fiap.postech.domain.serviceorder.model.ServiceOrder;
 import br.com.fiap.postech.domain.vehicle.model.Vehicle;
 import br.com.fiap.postech.port.persistence.owner.OwnerPersistencePort;
+import br.com.fiap.postech.port.monitoring.ServiceOrderObservabilityPort;
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderPersistencePort;
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderStatusLabelPort;
 import br.com.fiap.postech.port.persistence.vehicle.VehiclePersistencePort;
@@ -48,6 +49,9 @@ class ServiceOrderUseCaseTest {
 
     @Mock
     private ServiceOrderStatusLabelPort statusLabelPort;
+
+    @Mock
+    private ServiceOrderObservabilityPort serviceOrderObservabilityPort;
 
     @InjectMocks
     private ServiceOrderUseCase useCase;
@@ -118,6 +122,7 @@ class ServiceOrderUseCaseTest {
 
         assertThat(saved.getStatus()).isEqualTo("PENDING");
         assertThat(saved.getStatusLabel()).isEqualTo("Recebida");
+        verify(serviceOrderObservabilityPort).recordServiceOrderCreated(any());
     }
 
     @Test

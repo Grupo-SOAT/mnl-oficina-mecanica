@@ -6,6 +6,7 @@ import br.com.fiap.postech.domain.serviceorder.exception.ServiceOrderClientNotFo
 import br.com.fiap.postech.domain.serviceorder.exception.ServiceOrderNotFoundException;
 import br.com.fiap.postech.domain.serviceorder.exception.ServiceOrderVehicleNotFoundException;
 import br.com.fiap.postech.domain.serviceorder.model.ServiceOrder;
+import br.com.fiap.postech.port.monitoring.ServiceOrderObservabilityPort;
 import br.com.fiap.postech.port.persistence.owner.OwnerPersistencePort;
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderPersistencePort;
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderStatusLabelPort;
@@ -17,17 +18,20 @@ public class ServiceOrderUseCase {
     private final OwnerPersistencePort ownerPersistencePort;
     private final VehiclePersistencePort vehiclePersistencePort;
     private final ServiceOrderStatusLabelPort statusLabelPort;
+    private final ServiceOrderObservabilityPort serviceOrderObservabilityPort;
 
     public ServiceOrderUseCase(
             ServiceOrderPersistencePort persistencePort,
             OwnerPersistencePort ownerPersistencePort,
             VehiclePersistencePort vehiclePersistencePort,
-            ServiceOrderStatusLabelPort statusLabelPort
+            ServiceOrderStatusLabelPort statusLabelPort,
+            ServiceOrderObservabilityPort serviceOrderObservabilityPort
     ) {
         this.persistencePort = persistencePort;
         this.ownerPersistencePort = ownerPersistencePort;
         this.vehiclePersistencePort = vehiclePersistencePort;
         this.statusLabelPort = statusLabelPort;
+        this.serviceOrderObservabilityPort = serviceOrderObservabilityPort;
     }
 
     public ScrollPage<ServiceOrder> scroll(String status, Long clientId, Long vehicleId, Integer pageSize, String cursor) {
@@ -55,6 +59,7 @@ public class ServiceOrderUseCase {
         serviceOrder.setStatus("PENDING");
         var saved = persistencePort.save(serviceOrder);
         saved.setStatusLabel(statusLabelPort.resolve(saved.getStatus()));
+        serviceOrderObservabilityPort.recordServiceOrderCreated(saved.getId());
         return saved;
     }
 

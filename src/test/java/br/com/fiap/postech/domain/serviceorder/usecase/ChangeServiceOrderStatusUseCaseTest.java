@@ -8,6 +8,8 @@ import br.com.fiap.postech.domain.service.usecase.ChangeServiceStatusUseCase;
 import br.com.fiap.postech.domain.serviceorder.exception.PartialBudgetRejectionNotImplementedException;
 import br.com.fiap.postech.domain.serviceorder.exception.ServiceOrderNotFoundException;
 import br.com.fiap.postech.domain.serviceorder.model.ServiceOrderStatus;
+import br.com.fiap.postech.domain.serviceorder.model.ServiceOrderStatusChanged;
+import br.com.fiap.postech.port.monitoring.ServiceOrderObservabilityPort;
 import br.com.fiap.postech.port.persistence.service.ServicePersistencePort;
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderPersistencePort;
 import org.junit.jupiter.api.Test;
@@ -44,6 +46,8 @@ class ChangeServiceOrderStatusUseCaseTest {
     @Mock
     private EstimateServiceOrderAmountUseCase estimateServiceOrderAmountUseCase;
 
+    @Mock
+    private ServiceOrderObservabilityPort serviceOrderObservabilityPort;
 
     @InjectMocks
     private ChangeServiceOrderStatusUseCase useCase;
@@ -62,6 +66,7 @@ class ChangeServiceOrderStatusUseCaseTest {
         assertThat(updated.getStatus()).isEqualTo("IN_INSPECTION");
         assertThat(updated.getInspectedAt()).isNotNull();
         assertThat(updated.getUpdatedAt()).isNotNull();
+        verify(serviceOrderObservabilityPort).recordStatusTransition(any(ServiceOrderStatusChanged.class));
     }
 
     @Test

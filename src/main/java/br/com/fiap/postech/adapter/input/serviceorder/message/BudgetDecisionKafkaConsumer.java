@@ -3,6 +3,7 @@ package br.com.fiap.postech.adapter.input.serviceorder.message;
 import br.com.fiap.postech.adapter.input.api.model.BudgetDecision;
 import br.com.fiap.postech.adapter.input.serviceorder.message.event.BudgetDecisionEvent;
 import br.com.fiap.postech.domain.serviceorder.usecase.ProcessBudgetDecisionUseCase;
+import br.com.fiap.postech.port.monitoring.ServiceOrderObservabilityPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class BudgetDecisionKafkaConsumer {
 
     private final ProcessBudgetDecisionUseCase processBudgetDecisionUseCase;
+    private final ServiceOrderObservabilityPort serviceOrderObservabilityPort;
 
     @Transactional
     @KafkaListener(topics = "${app.budget.kafka.topic.decision}", groupId = "${spring.kafka.consumer.group-id}")
@@ -29,6 +31,12 @@ public class BudgetDecisionKafkaConsumer {
         if (key != null && !key.equals(String.valueOf(event.getServiceOrderId()))) {
             log.warn("Kafka key mismatch: received key={} but event.serviceOrderId={}", key, event.getServiceOrderId());
         }
-        processBudgetDecisionUseCase.process(event.getServiceOrderId(), BudgetDecision.valueOf(event.getDecision()));
+        try {
+            processBudgetDecisionUseCase.process(event.getServiceOrderId(), BudgetDecision.valueOf(event.getDecision()));
+        } catch (RuntimeException ex) {
+            serviceOrderObservabilityPort.recordBudgetDecisionProcessingFailure(
+                    event.getServiceOrderId(), event.getDecision(), ex);
+            throw ex;
+        }
     }
 }

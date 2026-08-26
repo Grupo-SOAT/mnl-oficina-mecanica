@@ -7,6 +7,7 @@ import br.com.fiap.postech.port.persistence.serviceorder.BudgetApprovalTokenPers
 import br.com.fiap.postech.port.persistence.service.ServicePersistencePort;
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderPersistencePort;
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderStatusLabelPort;
+import br.com.fiap.postech.port.monitoring.ServiceOrderObservabilityPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,6 +45,9 @@ class ProcessBudgetDecisionUseCaseTest {
     @Mock
     private ServiceOrderStatusLabelPort statusLabelPort;
 
+    @Mock
+    private ServiceOrderObservabilityPort serviceOrderObservabilityPort;
+
     private ProcessBudgetDecisionUseCase useCase;
 
     @BeforeEach
@@ -54,7 +58,8 @@ class ProcessBudgetDecisionUseCaseTest {
                 null,
                 finalizeInspectionUseCase,
                 estimateServiceOrderAmountUseCase,
-                statusLabelPort
+                statusLabelPort,
+                serviceOrderObservabilityPort
         );
         useCase = new ProcessBudgetDecisionUseCase(changeStatusUseCase, budgetApprovalTokenPersistencePort);
     }

@@ -8,22 +8,18 @@ import br.com.fiap.postech.domain.serviceorder.exception.PartialBudgetRejectionN
 import br.com.fiap.postech.domain.serviceorder.exception.ServiceOrderNotFoundException;
 import br.com.fiap.postech.domain.serviceorder.model.ServiceOrder;
 import br.com.fiap.postech.domain.serviceorder.model.ServiceOrderStatus;
+import br.com.fiap.postech.domain.serviceorder.model.ServiceOrderStatusChanged;
 import br.com.fiap.postech.domain.serviceorder.status.ServiceOrderState;
+import br.com.fiap.postech.port.monitoring.ServiceOrderObservabilityPort;
 import br.com.fiap.postech.port.persistence.service.ServicePersistencePort;
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderPersistencePort;
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderStatusLabelPort;
-import net.logstash.logback.argument.StructuredArguments;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 
 import static br.com.fiap.postech.domain.serviceorder.model.ServiceOrderStatus.*;
 
 public class ChangeServiceOrderStatusUseCase {
-
-    private static final Logger logger = LoggerFactory.getLogger(ChangeServiceOrderStatusUseCase.class);
 
     private final ServiceOrderPersistencePort serviceOrderPersistencePort;
     private final ServicePersistencePort servicePersistencePort;
@@ -31,6 +27,7 @@ public class ChangeServiceOrderStatusUseCase {
     private final FinalizeInspectionUseCase finalizeInspectionUseCase;
     private final EstimateServiceOrderAmountUseCase estimateServiceOrderAmountUseCase;
     private final ServiceOrderStatusLabelPort statusLabelPort;
+    private final ServiceOrderObservabilityPort serviceOrderObservabilityPort;
 
     public ChangeServiceOrderStatusUseCase(
             ServiceOrderPersistencePort serviceOrderPersistencePort,
@@ -38,7 +35,8 @@ public class ChangeServiceOrderStatusUseCase {
             ChangeServiceStatusUseCase changeServiceStatusUseCase,
             FinalizeInspectionUseCase finalizeInspectionUseCase,
             EstimateServiceOrderAmountUseCase estimateServiceOrderAmountUseCase,
-            ServiceOrderStatusLabelPort statusLabelPort
+            ServiceOrderStatusLabelPort statusLabelPort,
+            ServiceOrderObservabilityPort serviceOrderObservabilityPort
     ) {
         this.serviceOrderPersistencePort = serviceOrderPersistencePort;
         this.servicePersistencePort = servicePersistencePort;
@@ -46,6 +44,7 @@ public class ChangeServiceOrderStatusUseCase {
         this.finalizeInspectionUseCase = finalizeInspectionUseCase;
         this.estimateServiceOrderAmountUseCase = estimateServiceOrderAmountUseCase;
         this.statusLabelPort = statusLabelPort;
+        this.serviceOrderObservabilityPort = serviceOrderObservabilityPort;
     }
 
     public ServiceOrder registerProgress(Long id, ServiceOrderAction action) {
@@ -158,11 +157,8 @@ public class ChangeServiceOrderStatusUseCase {
 
     private void applyStatusTransition(ServiceOrder serviceOrder, ServiceOrderStatus targetStatus) {
         final var now = LocalDateTime.now();
-        final var from = serviceOrder.getStatus();
+        final var from = ServiceOrderStatus.valueOf(serviceOrder.getStatus());
         final var enteredAt = serviceOrder.getLastStatusChangedAt();
-        final var durationInSeconds = enteredAt == null
-                ? 0L
-                : Duration.between(enteredAt, now).toSeconds();
 
         serviceOrder.setStatus(targetStatus.name());
         serviceOrder.setStatusLabel(statusLabelPort.resolve(targetStatus.name()));
@@ -180,11 +176,13 @@ public class ChangeServiceOrderStatusUseCase {
             }
         }
 
-        logger.info("service_order status transitioned",
-                StructuredArguments.keyValue("so_id", serviceOrder.getId()),
-                StructuredArguments.keyValue("from_status", from),
-                StructuredArguments.keyValue("to_status", targetStatus.name()),
-                StructuredArguments.keyValue("duration_in_seconds", durationInSeconds));
+        serviceOrderObservabilityPort.recordStatusTransition(new ServiceOrderStatusChanged(
+                serviceOrder.getId(),
+                from,
+                targetStatus,
+                enteredAt,
+                now
+        ));
     }
 
     /**
