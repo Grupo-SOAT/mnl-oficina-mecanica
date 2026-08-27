@@ -26,7 +26,8 @@ import br.com.fiap.postech.port.persistence.serviceorder.BudgetApprovalTokenPers
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderPersistencePort;
 import br.com.fiap.postech.port.monitoring.ServiceOrderObservabilityPort;
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderStatusLabelPort;
-import br.com.fiap.postech.port.persistence.supply.SupplyPersistencePort;import br.com.fiap.postech.port.persistence.vehicle.VehiclePersistencePort;
+import br.com.fiap.postech.port.persistence.supply.SupplyPersistencePort;
+import br.com.fiap.postech.port.persistence.vehicle.VehiclePersistencePort;
 import br.com.fiap.postech.port.message.serviceorder.BudgetApprovalRequestPublisherPort;
 import br.com.fiap.postech.port.user.UserPort;
 import org.springframework.beans.factory.annotation.Value;
