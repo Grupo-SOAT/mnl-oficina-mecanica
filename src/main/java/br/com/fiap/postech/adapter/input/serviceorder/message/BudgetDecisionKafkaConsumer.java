@@ -7,11 +7,13 @@ import br.com.fiap.postech.port.monitoring.ServiceOrderObservabilityPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.kafka.annotation.BackOff;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.RetryableTopic;
+import org.springframework.kafka.retrytopic.SameIntervalTopicReuseStrategy;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
@@ -22,8 +24,13 @@ public class BudgetDecisionKafkaConsumer {
     private final ProcessBudgetDecisionUseCase processBudgetDecisionUseCase;
     private final ServiceOrderObservabilityPort serviceOrderObservabilityPort;
 
-    @Transactional
     @KafkaListener(topics = "${app.budget.kafka.topic.decision}", groupId = "${spring.kafka.consumer.group-id}")
+    @RetryableTopic(
+            attempts = "${app.budget.kafka.retry.attempts:3}",
+            backOff = @BackOff(delayString = "${app.budget.kafka.retry.delay-ms:2000}"),
+            sameIntervalTopicReuseStrategy = SameIntervalTopicReuseStrategy.SINGLE_TOPIC,
+            kafkaTemplate = "kafkaTemplate",
+            listenerContainerFactory = "kafkaListenerContainerFactory")
     public void consume(
             BudgetDecisionEvent event,
             @Header(KafkaHeaders.RECEIVED_KEY) String key
