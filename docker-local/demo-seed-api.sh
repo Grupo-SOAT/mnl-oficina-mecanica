@@ -54,29 +54,29 @@ os_status() {
 }
 
 wait_status() {
-  local os_id="$1" want="$2" st=""
+  local so_id="$1" want="$2" st=""
   for _ in $(seq 1 30); do
-    st="$(os_status "$os_id" 2>/dev/null || echo '')"
+    st="$(os_status "$so_id" 2>/dev/null || echo '')"
     [ "$st" = "$want" ] && return 0
     sleep 1
   done
-  echo "   ERRO: OS $os_id não chegou a $want (último: $st)" >&2
+  echo "   ERRO: OS $so_id não chegou a $want (último: $st)" >&2
   return 1
 }
 
 # 3. Cria e avança uma OS pelo ciclo completo de status
 create_and_advance() {
-  local i="$1" os_id sid sids plate
+  local i="$1" so_id sid sids plate
   plate="DEM-$(printf '%04d' $(( (RANDOM % 9000) + 1000 )))"
   log "Criando OS #$i (placa $plate)"
-  os_id="$(curl -sf -X POST "$BASE_URL/service-orders/cascade" \
+  so_id="$(curl -sf -X POST "$BASE_URL/service-orders/cascade" \
     -H "$AUTH" -H 'Content-Type: application/json' \
     -d "{\"vehicle\":{\"ownerId\":1,\"licensePlate\":\"$plate\",\"brand\":\"VW\",\"model\":\"Gol\",\"year\":2020,\"color\":\"PRATA\"},\"description\":\"OS de demonstração observabilidade $i\",\"catalogServiceIds\":[1,2]}" \
     | jq -r '.id')"
-  echo "   OS id=$os_id (PENDING)"; sleep "$STATUS_DELAY"
+  echo "   OS id=$so_id (PENDING)"; sleep "$STATUS_DELAY"
 
   progress() {
-    curl -sf -X POST "$BASE_URL/service-orders/$os_id/progress" \
+    curl -sf -X POST "$BASE_URL/service-orders/$so_id/progress" \
       -H "$AUTH" -H 'Content-Type: application/json' -d "$1" >/dev/null
   }
 
@@ -84,17 +84,17 @@ create_and_advance() {
   progress '{"action":"COMPLETE_INSPECTION"}'; echo "   -> AWAITING_APPROVAL"; sleep "$STATUS_DELAY"
 
   # Decisão de orçamento via Kafka (integração real consumida pelo monolito)
-  log "Publicando decisão APPROVE da OS $os_id no Kafka ($BUDGET_TOPIC)"
+  log "Publicando decisão APPROVE da OS $so_id no Kafka ($BUDGET_TOPIC)"
   docker exec -i "$KAFKA_CONTAINER" kafka-console-producer \
     --bootstrap-server localhost:9092 \
     --topic "$BUDGET_TOPIC" \
     --property parse.key=true --property key.separator=: \
-    <<< "$os_id:{\"serviceOrderId\":$os_id,\"decision\":\"APPROVE\"}"
+    <<< "$so_id:{\"serviceOrderId\":$so_id,\"decision\":\"APPROVE\"}"
   echo "   aguardando APPROVED..."
-  wait_status "$os_id" "APPROVED"
+  wait_status "$so_id" "APPROVED"
   echo "   -> APPROVED"; sleep "$STATUS_DELAY"
 
-  sids="$(curl -sf "$BASE_URL/service-orders/$os_id/services" -H "$AUTH" | jq -r '.data[].id')"
+  sids="$(curl -sf "$BASE_URL/service-orders/$so_id/services" -H "$AUTH" | jq -r '.data[].id')"
 
   # START_SERVICE só é permitido enquanto a OS está APPROVED (1º serviço);
   # serviços subsequentes partem direto para COMPLETE_SERVICE.

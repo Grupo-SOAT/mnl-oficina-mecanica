@@ -64,7 +64,6 @@ loki.process "app_logs" {
 			trace_id = "trace_id",
 			user_id  = "user_id",
 			so_id    = "so_id",
-			os_id    = "os_id",
 		}
 	}
 
@@ -73,7 +72,6 @@ loki.process "app_logs" {
 			trace_id = "trace_id",
 			user_id  = "user_id",
 			so_id    = "so_id",
-			os_id    = "os_id",
 		}
 	}
 
