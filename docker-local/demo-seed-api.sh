@@ -124,6 +124,37 @@ curl -s -o /dev/null -w "   placa inválida na criação -> %{http_code}\n" \
 curl -s -o /dev/null -w "   OS inexistente -> %{http_code}\n" \
   "$BASE_URL/service-orders/999999" -H "$AUTH"
 
+# 4.1 Transição de status inválida (estado PENDING só permite IN_INSPECTION/CANCELLED;
+#     COMPLETE_INSPECTION -> AWAITING_APPROVAL deve ser rejeitada com 409).
+log "Disparando transição de status inválida (COMPLETE_INSPECTION de PENDING)"
+invalid_plate="DEM-$(( (RANDOM % 9000) + 1000 ))"
+invalid_os="$(curl -sf -X POST "$BASE_URL/service-orders/cascade" \
+  -H "$AUTH" -H 'Content-Type: application/json' \
+  -d "{\"vehicle\":{\"ownerId\":1,\"licensePlate\":\"$invalid_plate\",\"brand\":\"VW\",\"model\":\"Gol\",\"year\":2020,\"color\":\"PRATA\"},\"description\":\"transição inválida\",\"catalogServiceIds\":[1]}" \
+  | jq -r '.id')"
+curl -s -o /dev/null -w "   COMPLETE_INSPECTION de PENDING (OS $invalid_os) -> %{http_code} (STATUS_CHANGE_NOT_ALLOWED)\n" \
+  -X POST "$BASE_URL/service-orders/$invalid_os/progress" \
+  -H "$AUTH" -H 'Content-Type: application/json' \
+  -d '{"action":"COMPLETE_INSPECTION"}'
+
+# 4.2 Força um 5xx (501) via decisão de orçamento PARTIALLY_REJECT: a feature de rejeição
+#     parcial ainda não é implementada, então o endpoint /service-orders/{id}/budget
+#     responde 501 NOT_IMPLEMENTED. Popula os painéis de erro HTTP 5xx e dispara o alerta.
+log "Forçando 5xx (501) via decisão PARTIALLY_REJECT"
+reject_plate="DEM-$(( (RANDOM % 9000) + 1000 ))"
+reject_os="$(curl -sf -X POST "$BASE_URL/service-orders/cascade" \
+  -H "$AUTH" -H 'Content-Type: application/json' \
+  -d "{\"vehicle\":{\"ownerId\":1,\"licensePlate\":\"$reject_plate\",\"brand\":\"VW\",\"model\":\"Gol\",\"year\":2020,\"color\":\"PRATA\"},\"description\":\"rejeição parcial 501\",\"catalogServiceIds\":[1]}" \
+  | jq -r '.id')"
+curl -s -o /dev/null -X POST "$BASE_URL/service-orders/$reject_os/progress" \
+  -H "$AUTH" -H 'Content-Type: application/json' -d '{"action":"START_INSPECTION"}'
+curl -s -o /dev/null -X POST "$BASE_URL/service-orders/$reject_os/progress" \
+  -H "$AUTH" -H 'Content-Type: application/json' -d '{"action":"COMPLETE_INSPECTION"}'
+curl -s -o /dev/null -w "   PARTIALLY_REJECT de AWAITING_APPROVAL (OS $reject_os) -> %{http_code} (NOT_IMPLEMENTED)\n" \
+  -X POST "$BASE_URL/service-orders/$reject_os/budget" \
+  -H "$AUTH" -H 'Content-Type: application/json' \
+  -d '{"decision":"PARTIALLY_REJECT"}'
+
 # 5. Força a DLT: publica decisões inválidas (o consumer lança -> retry -> DLT)
 log "Forçando $DLT_N mensagens para a DLT (decisões inválidas)"
 for i in $(seq 1 "$DLT_N"); do
