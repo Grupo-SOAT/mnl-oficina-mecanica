@@ -63,7 +63,7 @@
     {
       "id": 15,
       "type": "stat",
-      "title": "Requisi\u00e7\u00f5es por segundo",
+      "title": "Requisições por segundo",
       "gridPos": {
         "h": 5,
         "w": 6,
@@ -147,11 +147,11 @@
     {
       "id": 18,
       "type": "timeseries",
-      "title": "Uso de mem\u00f3ria (heap JVM)",
+      "title": "Uso de memória (heap JVM)",
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 0,
+        "w": 8,
+        "x": 8,
         "y": 6
       },
       "datasource": {
@@ -178,8 +178,8 @@
       "title": "Uso de CPU",
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
+        "w": 8,
+        "x": 16,
         "y": 6
       },
       "datasource": {
@@ -206,9 +206,37 @@
       ]
     },
     {
+      "id": 32,
+      "type": "timeseries",
+      "title": "Saúde e Prontidão",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "label_replace(probe_success{instance=~\".*/(liveness|readiness)$\"}, \"endpoint\", \"$1\", \"instance\", \".*/(liveness|readiness)$\")",
+          "legendFormat": "{{endpoint}}"
+        }
+      ]
+    },
+    {
       "id": 1,
       "type": "row",
-      "title": "Volume Di\u00e1rio de OS",
+      "title": "OS Overview",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -221,7 +249,7 @@
     {
       "id": 2,
       "type": "stat",
-      "title": "OS criadas (\u00faltimas 24h)",
+      "title": "OS criadas (últimas 24h)",
       "gridPos": {
         "h": 5,
         "w": 8,
@@ -252,8 +280,8 @@
       "title": "OS criadas ao longo do tempo",
       "gridPos": {
         "h": 5,
-        "w": 16,
-        "x": 8,
+        "w": 8,
+        "x": 16,
         "y": 15
       },
       "datasource": {
@@ -279,27 +307,14 @@
       ]
     },
     {
-      "id": 4,
-      "type": "row",
-      "title": "Tempo M\u00e9dio por Status",
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 20
-      },
-      "panels": []
-    },
-    {
       "id": 5,
       "type": "barchart",
-      "title": "Tempo m\u00e9dio (s) por status de origem",
+      "title": "Tempo médio (s) por status de origem",
       "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 21
+        "h": 5,
+        "w": 8,
+        "x": 8,
+        "y": 15
       },
       "datasource": {
         "type": "prometheus",
@@ -312,7 +327,7 @@
         "overrides": []
       },
       "options": {
-        "orientation": "vertical",
+        "orientation": "horizontal",
         "showValue": "auto",
         "legend": {
           "displayMode": "list",
@@ -321,7 +336,7 @@
       },
       "targets": [
         {
-          "expr": "label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(sum(service_order_status_duration_seconds_sum) by (from_status) / sum(service_order_status_duration_seconds_count) by (from_status), \"status_label\", \"Recebida\", \"from_status\", \"^PENDING$\"), \"status_label\", \"Em Diagn\u00f3stico\", \"from_status\", \"^IN_INSPECTION$\"), \"status_label\", \"Aguardando Aprova\u00e7\u00e3o\", \"from_status\", \"^AWAITING_APPROVAL$\"), \"status_label\", \"Aprovada\", \"from_status\", \"^APPROVED$\"), \"status_label\", \"Em Andamento\", \"from_status\", \"^IN_PROGRESS$\"), \"status_label\", \"Finalizada\", \"from_status\", \"^COMPLETED$\"), \"status_label\", \"Entregue\", \"from_status\", \"^DELIVERED$\"), \"status_label\", \"Cancelada\", \"from_status\", \"^CANCELLED$\"), \"status_label\", \"Parcialmente Rejeitada\", \"from_status\", \"^PARTIALLY_REJECTED$\")",
+          "expr": "label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(sum(service_order_status_duration_seconds_sum) by (from_status) / sum(service_order_status_duration_seconds_count) by (from_status), \"status_label\", \"Recebida\", \"from_status\", \"^PENDING$\"), \"status_label\", \"Em Diagnóstico\", \"from_status\", \"^IN_INSPECTION$\"), \"status_label\", \"Aguardando Aprovação\", \"from_status\", \"^AWAITING_APPROVAL$\"), \"status_label\", \"Aprovada\", \"from_status\", \"^APPROVED$\"), \"status_label\", \"Em Andamento\", \"from_status\", \"^IN_PROGRESS$\"), \"status_label\", \"Finalizada\", \"from_status\", \"^COMPLETED$\"), \"status_label\", \"Entregue\", \"from_status\", \"^DELIVERED$\"), \"status_label\", \"Cancelada\", \"from_status\", \"^CANCELLED$\"), \"status_label\", \"Parcialmente Rejeitada\", \"from_status\", \"^PARTIALLY_REJECTED$\")",
           "legendFormat": "{{status_label}}",
           "refId": "A",
           "instant": true
@@ -331,13 +346,13 @@
     {
       "id": 6,
       "type": "row",
-      "title": "Erros e Falhas nas Integra\u00e7\u00f5es",
+      "title": "Erros e Falhas nas Integrações",
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 29
+        "y": 20
       },
       "panels": []
     },
@@ -349,7 +364,7 @@
         "h": 5,
         "w": 8,
         "x": 0,
-        "y": 30
+        "y": 21
       },
       "datasource": {
         "type": "prometheus",
@@ -372,12 +387,12 @@
     {
       "id": 8,
       "type": "stat",
-      "title": "Falhas processamento de or\u00e7amento (Kafka)",
+      "title": "Falhas processamento de orçamento (Kafka)",
       "gridPos": {
         "h": 5,
         "w": 8,
         "x": 8,
-        "y": 30
+        "y": 21
       },
       "datasource": {
         "type": "prometheus",
@@ -400,12 +415,12 @@
     {
       "id": 9,
       "type": "stat",
-      "title": "Falhas de publica\u00e7\u00e3o de or\u00e7amento (Kafka)",
+      "title": "Falhas de publicação de orçamento (Kafka)",
       "gridPos": {
         "h": 5,
         "w": 8,
         "x": 16,
-        "y": 30
+        "y": 21
       },
       "datasource": {
         "type": "prometheus",
@@ -433,7 +448,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 35
+        "y": 26
       },
       "datasource": {
         "type": "prometheus",
@@ -456,25 +471,25 @@
     {
       "id": 11,
       "type": "row",
-      "title": "Lat\u00eancia das APIs",
+      "title": "Latência das APIs",
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 42
+        "y": 33
       },
       "panels": []
     },
     {
       "id": 12,
       "type": "timeseries",
-      "title": "Lat\u00eancia HTTP p95 por rota",
+      "title": "Latência HTTP p95 por rota",
       "gridPos": {
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 43
+        "y": 34
       },
       "datasource": {
         "type": "prometheus",
@@ -503,7 +518,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 52
+        "y": 43
       },
       "panels": []
     },
@@ -515,7 +530,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 53
+        "y": 44
       },
       "datasource": {
         "type": "prometheus",
