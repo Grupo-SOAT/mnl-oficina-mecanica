@@ -67,7 +67,7 @@
       "gridPos": {
         "h": 5,
         "w": 6,
-        "x": 6,
+        "x": 12,
         "y": 1
       },
       "datasource": {
@@ -95,7 +95,7 @@
       "gridPos": {
         "h": 5,
         "w": 6,
-        "x": 12,
+        "x": 6,
         "y": 1
       },
       "datasource": {
@@ -147,7 +147,7 @@
     {
       "id": 18,
       "type": "timeseries",
-      "title": "Heap JVM (por regi\u00e3o)",
+      "title": "Uso de mem\u00f3ria (heap JVM)",
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -175,7 +175,7 @@
     {
       "id": 19,
       "type": "timeseries",
-      "title": "Requisi\u00e7\u00f5es HTTP por status",
+      "title": "Uso de CPU",
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -188,15 +188,20 @@
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "reqps"
+          "unit": "percentunit"
         },
         "overrides": []
       },
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count[$__rate_interval])) by (status)",
-          "legendFormat": "{{status}}",
-          "refId": "A"
+          "refId": "A",
+          "expr": "process_cpu_usage",
+          "legendFormat": "processo"
+        },
+        {
+          "refId": "B",
+          "expr": "system_cpu_usage",
+          "legendFormat": "host"
         }
       ]
     },
