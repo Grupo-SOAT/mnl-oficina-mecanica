@@ -8,12 +8,16 @@ import br.com.fiap.postech.domain.serviceorder.exception.PartialBudgetRejectionN
 import br.com.fiap.postech.domain.serviceorder.exception.ServiceOrderNotFoundException;
 import br.com.fiap.postech.domain.serviceorder.model.ServiceOrder;
 import br.com.fiap.postech.domain.serviceorder.model.ServiceOrderStatus;
+import br.com.fiap.postech.domain.serviceorder.model.ServiceOrderStatusChanged;
 import br.com.fiap.postech.domain.serviceorder.status.ServiceOrderState;
+import br.com.fiap.postech.port.monitoring.ServiceOrderObservabilityPort;
 import br.com.fiap.postech.port.persistence.service.ServicePersistencePort;
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderPersistencePort;
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderStatusLabelPort;
 
 import java.time.LocalDateTime;
+
+import static br.com.fiap.postech.domain.serviceorder.model.ServiceOrderStatus.*;
 
 public class ChangeServiceOrderStatusUseCase {
 
@@ -23,6 +27,7 @@ public class ChangeServiceOrderStatusUseCase {
     private final FinalizeInspectionUseCase finalizeInspectionUseCase;
     private final EstimateServiceOrderAmountUseCase estimateServiceOrderAmountUseCase;
     private final ServiceOrderStatusLabelPort statusLabelPort;
+    private final ServiceOrderObservabilityPort serviceOrderObservabilityPort;
 
     public ChangeServiceOrderStatusUseCase(
             ServiceOrderPersistencePort serviceOrderPersistencePort,
@@ -30,7 +35,8 @@ public class ChangeServiceOrderStatusUseCase {
             ChangeServiceStatusUseCase changeServiceStatusUseCase,
             FinalizeInspectionUseCase finalizeInspectionUseCase,
             EstimateServiceOrderAmountUseCase estimateServiceOrderAmountUseCase,
-            ServiceOrderStatusLabelPort statusLabelPort
+            ServiceOrderStatusLabelPort statusLabelPort,
+            ServiceOrderObservabilityPort serviceOrderObservabilityPort
     ) {
         this.serviceOrderPersistencePort = serviceOrderPersistencePort;
         this.servicePersistencePort = servicePersistencePort;
@@ -38,6 +44,7 @@ public class ChangeServiceOrderStatusUseCase {
         this.finalizeInspectionUseCase = finalizeInspectionUseCase;
         this.estimateServiceOrderAmountUseCase = estimateServiceOrderAmountUseCase;
         this.statusLabelPort = statusLabelPort;
+        this.serviceOrderObservabilityPort = serviceOrderObservabilityPort;
     }
 
     public ServiceOrder registerProgress(Long id, ServiceOrderAction action) {
@@ -83,14 +90,16 @@ public class ChangeServiceOrderStatusUseCase {
 
     private void handleServiceAction(ServiceOrderAction action, Long relatedServiceId, ServiceOrder serviceOrder) {
         switch (action) {
-            case START_SERVICE -> {
-                changeServiceStatusUseCase.startService(serviceOrder.getId(), relatedServiceId);
-                updateServiceOrderIfNeeded(serviceOrder, ServiceOrderStatus.IN_PROGRESS);
-            }
-            case COMPLETE_SERVICE -> {
-                changeServiceStatusUseCase.completeService(serviceOrder.getId(), relatedServiceId);
-                checkAndUpdateToCompleted(serviceOrder);
-            }
+            case START_SERVICE -> changeServiceStatusUseCase.startService(
+                    serviceOrder.getId(),
+                    relatedServiceId,
+                    targetStatus -> applyStatusTransition(serviceOrder, targetStatus)
+            );
+            case COMPLETE_SERVICE -> changeServiceStatusUseCase.completeService(
+                    serviceOrder.getId(),
+                    relatedServiceId,
+                    targetStatus -> applyStatusTransition(serviceOrder, targetStatus)
+            );
             case CANCEL_SERVICE -> {
                 changeServiceStatusUseCase.cancelService(serviceOrder.getId(), relatedServiceId);
                 applyStatusTransition(serviceOrder, ServiceOrderStatus.CANCELLED);
@@ -99,22 +108,6 @@ public class ChangeServiceOrderStatusUseCase {
                 var targetStatus = resolveProgressTarget(action);
                 applyStatusTransition(serviceOrder, targetStatus);
             }
-        }
-    }
-
-    private void updateServiceOrderIfNeeded(ServiceOrder serviceOrder, ServiceOrderStatus targetStatus) {
-        if (!"IN_PROGRESS".equals(serviceOrder.getStatus())) {
-            applyStatusTransition(serviceOrder, targetStatus);
-        }
-    }
-
-    private void checkAndUpdateToCompleted(ServiceOrder serviceOrder) {
-        final var services = servicePersistencePort.findAllByServiceOrderId(serviceOrder.getId());
-        boolean allCompleted = services.stream()
-                .allMatch(s -> "COMPLETED".equals(s.getStatus()));
-
-        if (allCompleted && !"COMPLETED".equals(serviceOrder.getStatus())) {
-            applyStatusTransition(serviceOrder, ServiceOrderStatus.COMPLETED);
         }
     }
 
@@ -148,8 +141,8 @@ public class ChangeServiceOrderStatusUseCase {
             case START_INSPECTION -> ServiceOrderStatus.IN_INSPECTION;
             case COMPLETE_INSPECTION -> ServiceOrderStatus.AWAITING_APPROVAL;
             case DELIVER_VEHICLE -> ServiceOrderStatus.DELIVERED;
-            case START_SERVICE -> ServiceOrderStatus.IN_PROGRESS;
-            case COMPLETE_SERVICE -> ServiceOrderStatus.COMPLETED;
+            case START_SERVICE -> IN_PROGRESS;
+            case COMPLETE_SERVICE -> COMPLETED;
             case CANCEL_SERVICE -> ServiceOrderStatus.CANCELLED;
         };
     }
@@ -164,6 +157,9 @@ public class ChangeServiceOrderStatusUseCase {
 
     private void applyStatusTransition(ServiceOrder serviceOrder, ServiceOrderStatus targetStatus) {
         final var now = LocalDateTime.now();
+        final var from = ServiceOrderStatus.valueOf(serviceOrder.getStatus());
+        final var enteredAt = serviceOrder.getLastStatusChangedAt();
+
         serviceOrder.setStatus(targetStatus.name());
         serviceOrder.setStatusLabel(statusLabelPort.resolve(targetStatus.name()));
         serviceOrder.setUpdatedAt(now);
@@ -179,6 +175,14 @@ public class ChangeServiceOrderStatusUseCase {
             default -> {
             }
         }
+
+        serviceOrderObservabilityPort.recordStatusTransition(new ServiceOrderStatusChanged(
+                serviceOrder.getId(),
+                from,
+                targetStatus,
+                enteredAt,
+                now
+        ));
     }
 
     /**
@@ -192,13 +196,13 @@ public class ChangeServiceOrderStatusUseCase {
             final var now = LocalDateTime.now();
 
             for (Service service : services) {
-                if ("AWAITING_APPROVAL".equals(service.getStatus())) {
+                if (AWAITING_APPROVAL.name().equals(service.getStatus())) {
                     service.setStatus(targetStatus.name());
                     service.setUpdatedAt(now);
 
                     if (targetStatus == ServiceOrderStatus.APPROVED) {
                         service.setApprovedAt(now);
-                    } else if (targetStatus == ServiceOrderStatus.CANCELLED) {
+                    } else {
                         service.setCancelledAt(now);
                     }
 
