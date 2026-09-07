@@ -26,7 +26,9 @@ public class RolePermissions {
             // =========================
             Map.entry("GET_/owners", List.of("ROLE_ADMIN", "ROLE_MECHANIC", "ROLE_ATTENDANT", "ROLE_CHATBOT")),
             Map.entry("POST_/owners", List.of("ROLE_ADMIN", "ROLE_ATTENDANT", "ROLE_CHATBOT")),
-            Map.entry("GET_/owners/:id", List.of("ROLE_ADMIN", "ROLE_MECHANIC", "ROLE_ATTENDANT", "ROLE_CHATBOT")),
+            // ROLE_CLIENTE: emitida pela lambda de auth por CPF (repo lambda-code).
+            // Ainda sem escopo por dono - fica liberado para qualquer :id.
+            Map.entry("GET_/owners/:id", List.of("ROLE_ADMIN", "ROLE_MECHANIC", "ROLE_ATTENDANT", "ROLE_CHATBOT", "ROLE_CLIENTE")),
             Map.entry("PATCH_/owners/:id", List.of("ROLE_ADMIN", "ROLE_ATTENDANT", "ROLE_CHATBOT")),
             Map.entry("DELETE_/owners/:id", List.of("ROLE_ADMIN", "ROLE_ATTENDANT", "ROLE_CHATBOT")),
 
@@ -85,8 +87,10 @@ public class RolePermissions {
             Map.entry("GET_/service-orders",
                     List.of("ROLE_ADMIN", "ROLE_MECHANIC", "ROLE_ATTENDANT", "ROLE_CHATBOT", "ROLE_STOREKEEPER")),
             Map.entry("POST_/service-orders", List.of("ROLE_ADMIN", "ROLE_ATTENDANT", "ROLE_CHATBOT")),
+            // ROLE_CLIENTE: cliente autenticado por CPF pode consultar o status da
+            // sua propria OS. Ainda sem escopo por dono - fica liberado para qualquer :id.
             Map.entry("GET_/service-orders/:id",
-                    List.of("ROLE_ADMIN", "ROLE_MECHANIC", "ROLE_ATTENDANT", "ROLE_CHATBOT", "ROLE_STOREKEEPER")),
+                    List.of("ROLE_ADMIN", "ROLE_MECHANIC", "ROLE_ATTENDANT", "ROLE_CHATBOT", "ROLE_STOREKEEPER", "ROLE_CLIENTE")),
             Map.entry("PATCH_/service-orders/:id", List.of("ROLE_ADMIN")),
             Map.entry("DELETE_/service-orders/:id", List.of("ROLE_ADMIN")),
 
