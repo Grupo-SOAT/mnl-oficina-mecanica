@@ -96,10 +96,12 @@ class ChangeServiceOrderStatusUseCaseTest {
                 .status("AWAITING_APPROVAL")
                 .build();
         when(serviceOrderPersistencePort.findById(1L)).thenReturn(Optional.of(serviceOrder));
+        when(statusLabelPort.resolve("AWAITING_APPROVAL")).thenReturn("Aguardando aprovacao");
 
         var updated = useCase.registerProgress(1L, ServiceOrderAction.COMPLETE_INSPECTION);
 
         assertThat(updated.getStatus()).isEqualTo("AWAITING_APPROVAL");
+        assertThat(updated.getStatusLabel()).isEqualTo("Aguardando aprovacao");
         verify(serviceOrderPersistencePort, never()).save(any());
         verify(estimateServiceOrderAmountUseCase, never()).estimate(any());
         verify(finalizeInspectionUseCase, never()).finalizeInspection(any());

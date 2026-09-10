@@ -33,19 +33,19 @@ public class FinalizeInspectionUseCase {
         serviceOrderPersistencePort.findById(serviceOrderId)
                 .orElseThrow(() -> new ServiceOrderNotFoundException(serviceOrderId));
 
-        String token;
-        Instant expiresAt;
         Optional<BudgetApprovalToken> existing =
                 budgetApprovalTokenPersistencePort.findByServiceOrderId(serviceOrderId);
         if (existing.isPresent()) {
-            token = existing.get().token();
-            expiresAt = existing.get().expiresAt();
-        } else {
-            token = UUID.randomUUID().toString();
-            expiresAt = Instant.now().plusSeconds((long) tokenTtlHours * 3600L);
-            budgetApprovalTokenPersistencePort.create(new BudgetApprovalToken(serviceOrderId, token, expiresAt));
+            BudgetApprovalToken token = existing.get();
+            if (token.usedAt() == null && token.expiresAt().isAfter(Instant.now())) {
+                budgetApprovalRequestPublisherPort.publish(serviceOrderId, token.token());
+            }
+            return;
         }
 
+        String token = UUID.randomUUID().toString();
+        Instant expiresAt = Instant.now().plusSeconds((long) tokenTtlHours * 3600L);
+        budgetApprovalTokenPersistencePort.create(new BudgetApprovalToken(serviceOrderId, token, expiresAt));
         budgetApprovalRequestPublisherPort.publish(serviceOrderId, token);
     }
 }
