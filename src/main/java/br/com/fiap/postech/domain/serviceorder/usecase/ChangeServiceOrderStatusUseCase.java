@@ -58,6 +58,11 @@ public class ChangeServiceOrderStatusUseCase {
         final var currentStatus = ServiceOrderStatus.valueOf(serviceOrder.getStatus());
         final var targetStatus = resolveProgressTarget(action);
 
+        if (!isServiceAction(action) && currentStatus == targetStatus) {
+            serviceOrder.setStatusLabel(statusLabelPort.resolve(serviceOrder.getStatus()));
+            return serviceOrder;
+        }
+
         validateTransition(currentStatus, targetStatus);
 
         // Handle service-related actions

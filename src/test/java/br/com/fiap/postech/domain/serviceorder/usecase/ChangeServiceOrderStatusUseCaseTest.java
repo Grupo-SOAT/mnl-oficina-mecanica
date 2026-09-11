@@ -90,6 +90,25 @@ class ChangeServiceOrderStatusUseCaseTest {
     }
 
     @Test
+    void should_be_idempotent_when_registering_complete_inspection_on_already_awaiting_approval() {
+        var serviceOrder = ServiceOrderEntity.builder()
+                .id(1L)
+                .status("AWAITING_APPROVAL")
+                .build();
+        when(serviceOrderPersistencePort.findById(1L)).thenReturn(Optional.of(serviceOrder));
+        when(statusLabelPort.resolve("AWAITING_APPROVAL")).thenReturn("Aguardando aprovacao");
+
+        var updated = useCase.registerProgress(1L, ServiceOrderAction.COMPLETE_INSPECTION);
+
+        assertThat(updated.getStatus()).isEqualTo("AWAITING_APPROVAL");
+        assertThat(updated.getStatusLabel()).isEqualTo("Aguardando aprovacao");
+        verify(serviceOrderPersistencePort, never()).save(any());
+        verify(estimateServiceOrderAmountUseCase, never()).estimate(any());
+        verify(finalizeInspectionUseCase, never()).finalizeInspection(any());
+        verify(serviceOrderObservabilityPort, never()).recordStatusTransition(any(ServiceOrderStatusChanged.class));
+    }
+
+    @Test
     void should_change_awaiting_approval_to_approved() {
         var serviceOrder = ServiceOrderEntity.builder()
                 .id(1L)

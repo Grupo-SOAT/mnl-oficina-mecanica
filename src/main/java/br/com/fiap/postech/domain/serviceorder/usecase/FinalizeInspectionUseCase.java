@@ -7,6 +7,7 @@ import br.com.fiap.postech.port.persistence.serviceorder.BudgetApprovalTokenPers
 import br.com.fiap.postech.port.persistence.serviceorder.ServiceOrderPersistencePort;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 public class FinalizeInspectionUseCase {
@@ -32,12 +33,19 @@ public class FinalizeInspectionUseCase {
         serviceOrderPersistencePort.findById(serviceOrderId)
                 .orElseThrow(() -> new ServiceOrderNotFoundException(serviceOrderId));
 
+        Optional<BudgetApprovalToken> existing =
+                budgetApprovalTokenPersistencePort.findByServiceOrderId(serviceOrderId);
+        if (existing.isPresent()) {
+            BudgetApprovalToken token = existing.get();
+            if (token.usedAt() == null && token.expiresAt().isAfter(Instant.now())) {
+                budgetApprovalRequestPublisherPort.publish(serviceOrderId, token.token());
+            }
+            return;
+        }
+
         String token = UUID.randomUUID().toString();
         Instant expiresAt = Instant.now().plusSeconds((long) tokenTtlHours * 3600L);
-
-        BudgetApprovalToken approvalToken = new BudgetApprovalToken(serviceOrderId, token, expiresAt);
-        budgetApprovalTokenPersistencePort.create(approvalToken);
-
+        budgetApprovalTokenPersistencePort.create(new BudgetApprovalToken(serviceOrderId, token, expiresAt));
         budgetApprovalRequestPublisherPort.publish(serviceOrderId, token);
     }
 }

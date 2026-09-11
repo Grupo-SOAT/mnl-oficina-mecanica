@@ -16,6 +16,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -63,5 +64,57 @@ class FinalizeInspectionUseCaseTest {
         assertThat(capturedToken.createdAt()).isNotNull();
 
         verify(budgetApprovalRequestPublisherPort).publish(1L, capturedToken.token());
+    }
+
+    @Test
+    void should_reuse_existing_token_without_new_insert_when_inspection_already_finalized() {
+        var serviceOrder = ServiceOrderEntity.builder()
+                .id(1L)
+                .status("AWAITING_APPROVAL")
+                .build();
+        var existingToken = new BudgetApprovalToken(1L, "token-abc", java.time.Instant.now().plusSeconds(3600));
+        when(serviceOrderPersistencePort.findById(1L)).thenReturn(Optional.of(serviceOrder));
+        when(budgetApprovalTokenPersistencePort.findByServiceOrderId(1L)).thenReturn(Optional.of(existingToken));
+
+        useCase.finalizeInspection(1L);
+
+        verify(budgetApprovalTokenPersistencePort, never()).create(any());
+        verify(budgetApprovalRequestPublisherPort).publish(1L, "token-abc");
+    }
+
+    @Test
+    void should_skip_publish_when_existing_token_is_expired() {
+        var serviceOrder = ServiceOrderEntity.builder()
+                .id(1L)
+                .status("AWAITING_APPROVAL")
+                .build();
+        var now = java.time.Instant.now();
+        var expiredToken = new BudgetApprovalToken(
+                1L, 1L, "token-expired", now.minusSeconds(3600), now.minusSeconds(7200), null);
+        when(serviceOrderPersistencePort.findById(1L)).thenReturn(Optional.of(serviceOrder));
+        when(budgetApprovalTokenPersistencePort.findByServiceOrderId(1L)).thenReturn(Optional.of(expiredToken));
+
+        useCase.finalizeInspection(1L);
+
+        verify(budgetApprovalTokenPersistencePort, never()).create(any());
+        verify(budgetApprovalRequestPublisherPort, never()).publish(any(), any());
+    }
+
+    @Test
+    void should_skip_publish_when_existing_token_is_used() {
+        var serviceOrder = ServiceOrderEntity.builder()
+                .id(1L)
+                .status("AWAITING_APPROVAL")
+                .build();
+        var now = java.time.Instant.now();
+        var usedToken = new BudgetApprovalToken(
+                1L, 1L, "token-used", now.plusSeconds(3600), now.minusSeconds(60), now.minusSeconds(30));
+        when(serviceOrderPersistencePort.findById(1L)).thenReturn(Optional.of(serviceOrder));
+        when(budgetApprovalTokenPersistencePort.findByServiceOrderId(1L)).thenReturn(Optional.of(usedToken));
+
+        useCase.finalizeInspection(1L);
+
+        verify(budgetApprovalTokenPersistencePort, never()).create(any());
+        verify(budgetApprovalRequestPublisherPort, never()).publish(any(), any());
     }
 }
