@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import br.com.fiap.postech.adapter.input.api.model.ErrorResponse;
+import br.com.fiap.postech.config.ClienteResourceAccessDeniedException;
 import br.com.fiap.postech.domain.owner.exception.DuplicatedOwnerException;
 import br.com.fiap.postech.domain.owner.exception.InvalidDocumentException;
 import br.com.fiap.postech.domain.owner.exception.InvalidEmailException;
@@ -130,6 +131,13 @@ public class RestExceptionHandler {
     public ResponseEntity<ErrorResponse> handleInvalidVehicleYearException(InvalidVehicleYearException ex) {
         final var httpStatus = HttpStatus.BAD_REQUEST;
         final var response = new ErrorResponse(httpStatus.value(), "INVALID_VEHICLE_YEAR", ex.getMessage());
+        return new ResponseEntity<>(response, httpStatus);
+    }
+
+    @ExceptionHandler(ClienteResourceAccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleClienteResourceAccessDeniedException(ClienteResourceAccessDeniedException ex) {
+        final var httpStatus = HttpStatus.FORBIDDEN;
+        final var response = new ErrorResponse(httpStatus.value(), "FORBIDDEN", ex.getMessage());
         return new ResponseEntity<>(response, httpStatus);
     }
 }
