@@ -84,6 +84,10 @@ public class OwnerPersistenceAdapter implements OwnerPersistencePort{
             entity.setCreatedAt(owner.getCreatedAt());
         }
 
+        // Cadastro comum nao deve reativar um cliente bloqueado.
+        if (entity.getId() != null && entity.getId() > 0) {
+            repository.findById(entity.getId()).ifPresent(current -> entity.setActive(current.isActive()));
+        }
         return repository.save(entity);
     }
 

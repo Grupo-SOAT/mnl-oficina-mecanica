@@ -23,4 +23,11 @@ public class OwnerEntityTest {
         assertThat(entity).isInstanceOf(Owner.class);
     }
     
-}
+    @Test
+    void statusDefaultsToActiveAndCanBeDisabled() {
+        assertThat(new OwnerEntity().isActive()).isTrue();
+        var owner = OwnerEntity.builder().build();
+        assertThat(owner.isActive()).isTrue();
+        owner.setActive(false);
+        assertThat(owner.isActive()).isFalse();
+    }}

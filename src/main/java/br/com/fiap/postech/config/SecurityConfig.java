@@ -67,6 +67,7 @@ public class SecurityConfig {
                                 "/auth/change-password")
                         .permitAll()
 
+                        .requestMatchers(HttpMethod.PATCH, "/owners/*/status").hasRole("ADMIN")
                         .anyRequest().authenticated())
 
                 .exceptionHandling(ex -> ex
