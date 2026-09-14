@@ -97,8 +97,7 @@ jobs:
 
           echo "Atualizando imagem do monólito..."
 
-          sed -i "s|^[[:space:]]*image:.*|          image: ${IMAGE}|" \
-            "$CONFIG_FILE"
+          sed -i "/- name: workshop-backend/{n;s|image:.*|image: ${IMAGE}|;}" "$CONFIG_FILE"
 
           echo "Alterações realizadas:"
           git diff -- "$CONFIG_FILE"
