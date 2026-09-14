@@ -2,6 +2,7 @@ package br.com.fiap.postech.adapter.input.serviceorder.controller;
 
 import br.com.fiap.postech.adapter.input.api.model.*;
 import br.com.fiap.postech.adapter.input.serviceorder.mapper.ServiceOrderMapper;
+import br.com.fiap.postech.config.ClienteScopeGuard;
 import br.com.fiap.postech.domain.catalogservices.exception.CatalogServiceNotFoundException;
 import br.com.fiap.postech.domain.service.exception.NegativeSupplyQuantityException;
 import br.com.fiap.postech.domain.serviceorder.exception.*;
@@ -60,6 +61,7 @@ public class ServiceOrdersController implements ServiceOrdersApi {
     @Override
     public ResponseEntity<ServiceOrderData> getServiceOrderById(Long id) {
         final var serviceOrder = serviceOrderUseCase.getById(id);
+        ClienteScopeGuard.assertOwnsResource(serviceOrder.getClientId());
         final var responseBody = ServiceOrderMapper.toApiData(serviceOrder);
         return ResponseEntity.ok(responseBody);
     }

@@ -45,6 +45,10 @@ public class OwnerEntity implements Owner{
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean active = true;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

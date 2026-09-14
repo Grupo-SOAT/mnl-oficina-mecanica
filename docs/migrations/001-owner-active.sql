@@ -1,0 +1,6 @@
+BEGIN;
+ALTER TABLE owners ADD COLUMN IF NOT EXISTS active boolean;
+UPDATE owners SET active = true WHERE active IS NULL;
+ALTER TABLE owners ALTER COLUMN active SET DEFAULT true;
+ALTER TABLE owners ALTER COLUMN active SET NOT NULL;
+COMMIT;

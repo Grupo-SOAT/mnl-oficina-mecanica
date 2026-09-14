@@ -79,9 +79,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 🔐 Só autentica se ainda não estiver autenticado
             if (SecurityContextHolder.getContext().getAuthentication() == null && username != null) {
 
+                // userId vai nas credentials para o RoleAuthorizationFilter/controllers
+                // poderem checar escopo por dono (ex.: ROLE_CLIENTE em /owners/:id).
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         username,
-                        null,
+                        claims.get("userId"),
                         authorities);
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);

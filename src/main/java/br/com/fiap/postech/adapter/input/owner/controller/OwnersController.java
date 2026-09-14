@@ -4,6 +4,7 @@ import br.com.fiap.postech.adapter.input.api.model.OwnerData;
 import br.com.fiap.postech.adapter.input.api.model.OwnerRequest;
 import br.com.fiap.postech.adapter.input.api.model.PaginatedOwnerResponse;
 import br.com.fiap.postech.adapter.input.owner.mapper.OwnerMapper;
+import br.com.fiap.postech.config.ClienteScopeGuard;
 import br.com.fiap.postech.domain.owner.usecase.OwnerUseCase;
 import br.com.fiap.postech.port.api.OwnersApi;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class OwnersController implements OwnersApi {
     @Override
     public ResponseEntity<OwnerData> getOwnerById(Long id) {
         final var owner = ownerUseCase.getById(id);
+        ClienteScopeGuard.assertOwnsResource(owner.getId());
         final var responseBody = OwnerMapper.toApiData(owner);
 
         return ResponseEntity.ok(responseBody);
