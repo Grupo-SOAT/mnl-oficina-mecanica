@@ -704,7 +704,7 @@ O projeto é complementado pelos repositórios de infraestrutura, Lambda e micro
 
 # 📚 Projeto
 
-Este repositório faz parte da solução **Oficina Mecânica – Tech Challenge Fase 3**, desenvolvida pelo **Grupo-SOAT**.
+Este repositório faz parte da solução **Oficina Mecânica**, desenvolvida pelo **Grupo-SOAT**.
 
 ---
 
