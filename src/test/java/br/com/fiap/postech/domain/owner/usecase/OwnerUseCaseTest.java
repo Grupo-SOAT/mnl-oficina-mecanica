@@ -120,9 +120,10 @@ public class OwnerUseCaseTest {
 
     @Test
     void should_update_owner() {
+        var createdAt = java.time.LocalDateTime.of(2026, 1, 1, 10, 0);
         OwnerEntity existing = OwnerEntity.builder().id(10L).email("teste@email.com")
-        .document("31058167049").documentType(DocumentType.CPF).build();
-        OwnerEntity incoming = OwnerEntity.builder().id(10L).email("teste@email.com")
+        .document("31058167049").documentType(DocumentType.CPF).createdAt(createdAt).build();
+        OwnerEntity incoming = OwnerEntity.builder().email("teste@email.com")
         .document("31058167049").documentType(DocumentType.CPF).build();
 
         when(persistencePort.findByDocument("31058167049")).thenReturn(Optional.of(existing));
@@ -131,8 +132,13 @@ public class OwnerUseCaseTest {
 
         Owner updated = useCase.update(10L, incoming);
 
-        assertThat(updated).isSameAs(incoming);
-        assertThat(incoming.getId()).isEqualTo(10L);
+        assertThat(updated).usingRecursiveComparison().isEqualTo(OwnerEntity.builder()
+                .id(10L)
+                .email("teste@email.com")
+                .document("31058167049")
+                .documentType(DocumentType.CPF)
+                .createdAt(createdAt)
+                .build());
     }
 
     @Test
@@ -206,5 +212,31 @@ public class OwnerUseCaseTest {
                 .hasMessage("Owner not found for id: 22");
 
         verify(persistencePort, never()).deleteById(22L);
+    }
+
+    @Test
+    void should_reject_create_with_invalid_document() {
+        OwnerEntity owner = OwnerEntity.builder()
+                .email("teste@email.com")
+                .document("1234")
+                .documentType(DocumentType.CPF)
+                .build();
+
+        assertThatThrownBy(() -> useCase.create(owner))
+                .isInstanceOf(InvalidDocumentException.class);
+        verify(persistencePort, never()).save(any());
+    }
+
+    @Test
+    void should_reject_create_with_invalid_email() {
+        OwnerEntity owner = OwnerEntity.builder()
+                .email("emailErrado")
+                .document("31058167049")
+                .documentType(DocumentType.CPF)
+                .build();
+
+        assertThatThrownBy(() -> useCase.create(owner))
+                .isInstanceOf(InvalidEmailException.class);
+        verify(persistencePort, never()).save(any());
     }
 }

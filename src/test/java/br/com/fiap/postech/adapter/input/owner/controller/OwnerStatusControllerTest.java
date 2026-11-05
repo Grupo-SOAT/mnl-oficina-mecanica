@@ -35,4 +35,11 @@ class OwnerStatusControllerTest {
         assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> controller.updateStatus(1L, new OwnerStatusController.StatusRequest(null)));
         verifyNoInteractions(repository);
     }
+
+    @Test void missingOwnerIsReported() {
+        auth("ROLE_ADMIN");
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+        assertThrows(br.com.fiap.postech.domain.owner.exception.OwnerNotFoundException.class,
+                () -> controller.updateStatus(99L, new OwnerStatusController.StatusRequest(true)));
+    }
 }

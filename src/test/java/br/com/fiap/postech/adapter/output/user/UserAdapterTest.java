@@ -19,7 +19,9 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -88,6 +90,7 @@ class UserAdapterTest {
 
         assertTrue(result.isPresent());
         assertEquals(1L, result.get().id());
+        assertEquals(List.of(Roles.ADMIN), result.get().roles());
     }
 
     // =========================
@@ -207,5 +210,79 @@ class UserAdapterTest {
         entity.setPassword("123");
         entity.setRolesList(List.of("ADMIN"));
         return entity;
+    }
+
+    @Test
+    void shouldPersistEncodedPasswordAndRolesWhenCreatingUser() {
+        UserDTO dto = new UserDTO("andre", List.of(Roles.ADMIN));
+        when(passwordEncoder.encode("123")).thenReturn("encoded");
+        when(userRepository.save(any(UserEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        adapter.createUser(dto, "123");
+
+        ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
+        verify(userRepository).save(captor.capture());
+        assertThat(captor.getValue())
+                .usingRecursiveComparison()
+                .isEqualTo(UserEntity.builder()
+                        .username("andre")
+                        .password("encoded")
+                        .roles(new String[]{"ADMIN"})
+                        .build());
+    }
+
+    @Test
+    void shouldUpdateUsernameAndRolesOnExistingEntity() {
+        UserDTO dto = new UserDTO("joao", List.of(Roles.ATTENDANT));
+        UserEntity existing = buildEntity();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(userRepository.save(any(UserEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        adapter.updateUser(1L, dto);
+
+        assertThat(existing)
+                .usingRecursiveComparison()
+                .isEqualTo(UserEntity.builder()
+                        .id(1L)
+                        .username("joao")
+                        .password("123")
+                        .roles(new String[]{"ATTENDANT"})
+                        .build());
+    }
+
+    @Test
+    void shouldScrollByUsernameWhenFilterIsInformed() {
+        UserEntity entity = buildEntity();
+        when(userRepository.findByUsernameAfterCursor(eq("andre"), anyLong(), any()))
+                .thenReturn(List.of(entity));
+
+        ScrollPage<User> result = adapter.scroll("andre", 10, "1");
+
+        assertThat(result.data()).hasSize(1);
+        verify(userRepository, never()).findAllAfterCursor(anyLong(), any());
+    }
+
+    @Test
+    void shouldScrollAllUsersWhenUsernameIsBlank() {
+        UserEntity entity = buildEntity();
+        when(userRepository.findAllAfterCursor(anyLong(), any()))
+                .thenReturn(List.of(entity));
+
+        ScrollPage<User> result = adapter.scroll("   ", 10, "1");
+
+        assertThat(result.data()).hasSize(1);
+        verify(userRepository, never()).findByUsernameAfterCursor(any(), anyLong(), any());
+    }
+
+    @Test
+    void shouldMapEmptyRolesFromEntity() {
+        UserEntity entity = buildEntity();
+        entity.setRolesList(List.of());
+        when(userRepository.findById(1L)).thenReturn(Optional.of(entity));
+
+        User result = adapter.findById(1L).orElseThrow();
+
+        assertThat(result.roles()).isEmpty();
     }
 }

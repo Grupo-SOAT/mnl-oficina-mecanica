@@ -166,4 +166,34 @@ public class DocumentValidatorTest {
 
         assertThat(result).isFalse();
     }
+
+    @Test
+    void should_validate_cpf_when_first_check_digit_remainder_is_one() {
+        assertThat(DocumentValidator.isValid("21175841102", DocumentType.CPF)).isTrue();
+    }
+
+    @Test
+    void should_validate_cpf_when_second_check_digit_remainder_is_one() {
+        assertThat(DocumentValidator.isValid("17557023960", DocumentType.CPF)).isTrue();
+    }
+
+    @Test
+    void should_validate_cnpj_when_first_check_digit_remainder_is_one() {
+        assertThat(DocumentValidator.isValid("89295963904404", DocumentType.CNPJ)).isTrue();
+    }
+
+    @Test
+    void should_validate_cnpj_when_first_check_digit_remainder_is_two() {
+        assertThat(DocumentValidator.isValid("72097509242893", DocumentType.CNPJ)).isTrue();
+    }
+
+    @Test
+    void should_validate_cnpj_when_second_check_digit_remainder_is_one() {
+        assertThat(DocumentValidator.isValid("02567566331580", DocumentType.CNPJ)).isTrue();
+    }
+
+    @Test
+    void should_validate_cnpj_when_second_check_digit_remainder_is_two() {
+        assertThat(DocumentValidator.isValid("52903852874249", DocumentType.CNPJ)).isTrue();
+    }
 }

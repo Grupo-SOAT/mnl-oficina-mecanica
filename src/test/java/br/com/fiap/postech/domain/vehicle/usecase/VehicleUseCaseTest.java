@@ -17,6 +17,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import br.com.fiap.postech.adapter.output.persistence.helper.scroll.ScrollPage;
 import br.com.fiap.postech.domain.owner.exception.OwnerNotFoundException;
@@ -30,6 +32,7 @@ import br.com.fiap.postech.port.persistence.owner.OwnerPersistencePort;
 import br.com.fiap.postech.port.persistence.vehicle.VehiclePersistencePort;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class VehicleUseCaseTest {
 
     @Mock
@@ -288,5 +291,71 @@ public class VehicleUseCaseTest {
                 .hasMessage("Vehicle not found for id: 1");
 
         verify(persistencePort, never()).deleteById(any());
+    }
+
+    @Test
+    void should_accept_year_1900() {
+        assertThat(createWithYear(1900)).isSameAs(vehicle);
+    }
+
+    @Test
+    void should_accept_year_2050() {
+        assertThat(createWithYear(2050)).isSameAs(vehicle);
+    }
+
+    @Test
+    void should_reject_year_1899() {
+        assertThatThrownBy(() -> createWithYear(1899))
+                .isInstanceOf(br.com.fiap.postech.domain.vehicle.excecption.InvalidVehicleYearException.class);
+    }
+
+    @Test
+    void should_reject_year_2051() {
+        assertThatThrownBy(() -> createWithYear(2051))
+                .isInstanceOf(br.com.fiap.postech.domain.vehicle.excecption.InvalidVehicleYearException.class);
+    }
+
+    @Test
+    void should_reject_null_year() {
+        assertThatThrownBy(() -> createWithYear(null))
+                .isInstanceOf(br.com.fiap.postech.domain.vehicle.excecption.InvalidVehicleYearException.class);
+    }
+
+    private Vehicle createWithYear(Integer year) {
+        when(vehicle.getOwnerId()).thenReturn(10L);
+        when(vehicle.getLicensePlate()).thenReturn("ABC1D23");
+        when(vehicle.getYear()).thenReturn(year);
+        when(ownerPersistencePort.findById(10L)).thenReturn(Optional.of(mock(Owner.class)));
+        when(persistencePort.findByLicensePlate("ABC1D23")).thenReturn(Optional.empty());
+        when(persistencePort.save(vehicle)).thenReturn(vehicle);
+        return useCase.create(vehicle);
+    }
+
+    @Test
+    void should_reject_update_with_invalid_license_plate() {
+        when(vehicle.getLicensePlate()).thenReturn("INVALID");
+
+        assertThatThrownBy(() -> useCase.update(1L, vehicle))
+                .isInstanceOf(InvalidLicensePlateException.class);
+    }
+
+    @Test
+    void should_reject_update_with_invalid_year() {
+        when(vehicle.getLicensePlate()).thenReturn("ABC1D23");
+        when(vehicle.getYear()).thenReturn(1800);
+
+        assertThatThrownBy(() -> useCase.update(1L, vehicle))
+                .isInstanceOf(br.com.fiap.postech.domain.vehicle.excecption.InvalidVehicleYearException.class);
+    }
+
+    @Test
+    void should_reject_update_when_owner_is_missing() {
+        when(vehicle.getLicensePlate()).thenReturn("ABC1D23");
+        when(vehicle.getYear()).thenReturn(2022);
+        when(vehicle.getOwnerId()).thenReturn(10L);
+        when(ownerPersistencePort.findById(10L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> useCase.update(1L, vehicle))
+                .isInstanceOf(OwnerNotFoundException.class);
     }
 }

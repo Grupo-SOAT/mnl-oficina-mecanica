@@ -21,6 +21,8 @@ import br.com.fiap.postech.domain.user.exception.UserNotFoundException;
 import br.com.fiap.postech.domain.user.exception.UsernameNotFoundException;
 import br.com.fiap.postech.domain.vehicle.excecption.DuplicatedVehicleException;
 import br.com.fiap.postech.domain.vehicle.excecption.InvalidLicensePlateException;
+import br.com.fiap.postech.domain.vehicle.excecption.InvalidVehicleYearException;
+import br.com.fiap.postech.config.ClienteResourceAccessDeniedException;
 import br.com.fiap.postech.domain.vehicle.excecption.NoMatchingVehiclesException;
 import br.com.fiap.postech.domain.vehicle.excecption.VehicleNotFoundException;
 
@@ -198,5 +200,21 @@ class RestExceptionHandlerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody().getCode()).isEqualTo(400);
         assertThat(response.getBody().getReason()).isEqualTo("INVALID_LICENSE_PLATE");
+    }
+
+    @Test
+    void should_handle_invalid_vehicle_year_exception() {
+        var response = handler.handleInvalidVehicleYearException(new InvalidVehicleYearException(1800));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getReason()).isEqualTo("INVALID_VEHICLE_YEAR");
+    }
+
+    @Test
+    void should_handle_cliente_resource_access_denied_exception() {
+        var response = handler.handleClienteResourceAccessDeniedException(new ClienteResourceAccessDeniedException());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(response.getBody().getReason()).isEqualTo("FORBIDDEN");
     }
 }

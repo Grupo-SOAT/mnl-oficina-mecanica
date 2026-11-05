@@ -11,9 +11,15 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+
+import jakarta.persistence.criteria.Predicate;
+
+import br.com.fiap.postech.adapter.output.persistence.SpecificationProbe;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -26,6 +32,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class CatalogServicesPersistenceAdapterTest {
     @Mock
     private CatalogServicesRepository repository;
@@ -145,6 +152,85 @@ public class CatalogServicesPersistenceAdapterTest {
         boolean exists = adapter.existsById(5L);
 
         assertThat(exists).isTrue();
+    }
+
+    @Test
+    void should_report_absence_when_catalog_service_does_not_exist() {
+        when(repository.existsById(5L)).thenReturn(false);
+
+        assertThat(adapter.existsById(5L)).isFalse();
+    }
+
+    @Test
+    void should_link_supplies_to_catalog_service_when_saving() {
+        NeededSupplyEntity supply = NeededSupplyEntity.builder().servicesSuppliesId(1L).supplyAmount(300).build();
+        CatalogServicesEntity entity = CatalogServicesEntity.builder()
+                .id(7L)
+                .name("Servico")
+                .supplies(new ArrayList<>(List.of(supply)))
+                .build();
+        when(repository.save(entity)).thenReturn(entity);
+
+        adapter.save(entity);
+
+        assertThat(entity.getSupplies()).allSatisfy(item -> assertThat(item.getCatalogServices()).isSameAs(entity));
+    }
+
+    @Test
+    void should_build_empty_specification_when_filters_are_absent() {
+        SpecificationProbe probe = evaluateScrollSpecification(null, null, null);
+
+        assertThat(probe.andPredicates()).isEmpty();
+        probe.verifyOrderWasApplied();
+    }
+
+    @Test
+    void should_build_id_predicate_when_id_is_informed() {
+        SpecificationProbe probe = evaluateScrollSpecification(7L, null, null);
+
+        assertThat(probe.andPredicates()).hasSize(1);
+        verify(probe.builder()).equal(any(), eq(7L));
+    }
+
+    @Test
+    void should_build_name_predicate_when_name_is_informed() {
+        SpecificationProbe probe = evaluateScrollSpecification(null, "Oleo", null);
+
+        assertThat(probe.andPredicates()).hasSize(1);
+        verify(probe.builder()).like(any(), eq("%oleo%"));
+    }
+
+    @Test
+    void should_ignore_blank_name_filter() {
+        SpecificationProbe probe = evaluateScrollSpecification(null, "   ", null);
+
+        assertThat(probe.andPredicates()).isEmpty();
+    }
+
+    @Test
+    void should_build_cursor_predicate_when_cursor_is_positive() {
+        SpecificationProbe probe = evaluateScrollSpecification(null, null, "10");
+
+        assertThat(probe.andPredicates()).hasSize(1);
+        verify(probe.builder()).greaterThan(any(), eq(10L));
+    }
+
+    @Test
+    void should_build_all_predicates_together() {
+        SpecificationProbe probe = evaluateScrollSpecification(7L, "Oleo", "10");
+
+        assertThat(probe.andPredicates()).hasSize(3);
+    }
+
+    private SpecificationProbe evaluateScrollSpecification(Long id, String name, String cursor) {
+        when(repository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        adapter.scroll(id, name, 10, cursor);
+
+        ArgumentCaptor<Specification<CatalogServicesEntity>> captor = ArgumentCaptor.forClass(Specification.class);
+        verify(repository).findAll(captor.capture(), any(Pageable.class));
+        return SpecificationProbe.evaluate(captor.getValue());
     }
 
     private static final class TestCatalogServices implements CatalogServices {

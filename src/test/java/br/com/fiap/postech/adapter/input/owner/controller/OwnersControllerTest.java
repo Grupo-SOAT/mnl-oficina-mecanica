@@ -22,6 +22,7 @@ import br.com.fiap.postech.adapter.input.api.model.PaginatedOwnerResponse;
 import br.com.fiap.postech.adapter.output.owner.persistence.entity.OwnerEntity;
 import br.com.fiap.postech.adapter.output.persistence.helper.scroll.ScrollPage;
 import br.com.fiap.postech.domain.owner.model.Owner;
+import br.com.fiap.postech.config.ClienteScopeGuard;
 import br.com.fiap.postech.domain.owner.usecase.OwnerUseCase;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -309,5 +310,18 @@ public class OwnersControllerTest {
 
         verify(ownerUseCase).delete(55L);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+    }
+
+    @Test
+    void should_assert_client_scope_when_getting_owner_by_id() {
+        Owner owner = OwnerEntity.builder().id(3L).email("teste3@email.com").build();
+        when(ownerUseCase.getById(3L)).thenReturn(owner);
+
+        try (org.mockito.MockedStatic<ClienteScopeGuard> guard =
+                     org.mockito.Mockito.mockStatic(ClienteScopeGuard.class)) {
+            controller.getOwnerById(3L);
+
+            guard.verify(() -> ClienteScopeGuard.assertOwnsResource(3L));
+        }
     }
 }

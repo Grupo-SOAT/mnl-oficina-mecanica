@@ -25,6 +25,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final Environment environment;
 
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -82,7 +83,7 @@ public class SecurityConfig {
                             response.getWriter().write("{\"error\":\"FORBIDDEN\"}");
                         }))
 
-                // JWT primeiro
+                // JWT (também aceita a chave interna service-to-service)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 
                 // depois autorização

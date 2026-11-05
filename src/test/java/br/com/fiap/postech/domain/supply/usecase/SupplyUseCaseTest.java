@@ -177,4 +177,15 @@ class SupplyUseCaseTest {
                 arguments(7, 5, 7, 5)
         );
     }
+
+    @Test
+    void should_throw_when_updating_to_duplicated_sku() {
+        SupplyEntity incoming = SupplyEntity.builder().sku("SKU-1").build();
+        when(persistencePort.findBySku("SKU-1"))
+                .thenReturn(Optional.of(SupplyEntity.builder().id(9L).sku("SKU-1").build()));
+
+        assertThatThrownBy(() -> useCase.update(1L, incoming))
+                .isInstanceOf(DuplicatedSupplyException.class);
+        verify(persistencePort, never()).findById(any());
+    }
 }

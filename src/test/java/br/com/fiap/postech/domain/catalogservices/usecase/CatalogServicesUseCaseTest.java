@@ -27,10 +27,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.STRICT_STUBS)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class CatalogServicesUseCaseTest {
     @Mock
     private CatalogServicesPersistencePort persistencePort;
+
+    @Mock
+    private SupplyPersistencePort supplyPersistencePort;
 
     @InjectMocks
     private CatalogServicesUseCase useCase;
@@ -142,5 +145,191 @@ public class CatalogServicesUseCaseTest {
                 .hasMessage("Catalog services not found for id: 2");
 
         verify(persistencePort, never()).deleteById(22L);
+    }
+
+    @Test
+    void should_create_valid_catalog_service() {
+        CatalogServicesEntity input = CatalogServicesEntity.builder()
+                .name("Servico")
+                .basePrice(BigDecimal.TEN)
+                .supplies(null)
+                .build();
+        when(persistencePort.findByName("Servico")).thenReturn(Optional.empty());
+        when(persistencePort.save(input)).thenReturn(input);
+
+        CatalogServices saved = useCase.create(input);
+
+        assertThat(saved).isSameAs(input);
+    }
+
+    @Test
+    void should_reject_create_with_null_name() {
+        CatalogServicesEntity input = CatalogServicesEntity.builder()
+                .name(null)
+                .basePrice(BigDecimal.TEN)
+                .build();
+
+        assertThatThrownBy(() -> useCase.create(input))
+                .isInstanceOf(br.com.fiap.postech.domain.catalogservices.exception.InvalidCatalogServiceNameException.class);
+    }
+
+    @Test
+    void should_reject_create_with_blank_name() {
+        CatalogServicesEntity input = CatalogServicesEntity.builder()
+                .name("   ")
+                .basePrice(BigDecimal.TEN)
+                .build();
+
+        assertThatThrownBy(() -> useCase.create(input))
+                .isInstanceOf(br.com.fiap.postech.domain.catalogservices.exception.InvalidCatalogServiceNameException.class);
+    }
+
+    @Test
+    void should_reject_create_with_null_price() {
+        CatalogServicesEntity input = CatalogServicesEntity.builder()
+                .name("Servico")
+                .basePrice(null)
+                .build();
+
+        assertThatThrownBy(() -> useCase.create(input))
+                .isInstanceOf(br.com.fiap.postech.domain.catalogservices.exception.InvalidCatalogServicePriceException.class);
+    }
+
+    @Test
+    void should_reject_create_with_zero_price() {
+        CatalogServicesEntity input = CatalogServicesEntity.builder()
+                .name("Servico")
+                .basePrice(BigDecimal.ZERO)
+                .build();
+
+        assertThatThrownBy(() -> useCase.create(input))
+                .isInstanceOf(br.com.fiap.postech.domain.catalogservices.exception.InvalidCatalogServicePriceException.class);
+    }
+
+    @Test
+    void should_update_catalog_service() {
+        CatalogServicesEntity existing = CatalogServicesEntity.builder().id(5L).name("Antigo").build();
+        CatalogServicesEntity incoming = CatalogServicesEntity.builder()
+                .name("Novo")
+                .basePrice(BigDecimal.TEN)
+                .build();
+        when(persistencePort.findById(5L)).thenReturn(Optional.of(existing));
+        when(persistencePort.save(any(CatalogServices.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        CatalogServices updated = useCase.update(5L, incoming);
+
+        assertThat(updated.getId()).isEqualTo(5L);
+    }
+
+    @Test
+    void should_reject_update_with_invalid_name() {
+        CatalogServicesEntity incoming = CatalogServicesEntity.builder()
+                .name("   ")
+                .basePrice(BigDecimal.TEN)
+                .build();
+
+        assertThatThrownBy(() -> useCase.update(5L, incoming))
+                .isInstanceOf(br.com.fiap.postech.domain.catalogservices.exception.InvalidCatalogServiceNameException.class);
+    }
+
+    @Test
+    void should_reject_update_with_invalid_price() {
+        CatalogServicesEntity incoming = CatalogServicesEntity.builder()
+                .name("Novo")
+                .basePrice(BigDecimal.valueOf(-1))
+                .build();
+
+        assertThatThrownBy(() -> useCase.update(5L, incoming))
+                .isInstanceOf(br.com.fiap.postech.domain.catalogservices.exception.InvalidCatalogServicePriceException.class);
+    }
+
+    @Test
+    void should_accept_supply_without_referenced_supply() {
+        CatalogServicesEntity input = CatalogServicesEntity.builder()
+                .name("Servico")
+                .basePrice(BigDecimal.TEN)
+                .supplies(List.of(NeededSupplyEntity.builder()
+                        .supply(null)
+                        .supplyAmount(5)
+                        .build()))
+                .build();
+        when(persistencePort.findByName("Servico")).thenReturn(Optional.empty());
+        when(persistencePort.save(input)).thenReturn(input);
+
+        CatalogServices saved = useCase.create(input);
+
+        assertThat(saved).isSameAs(input);
+        verify(supplyPersistencePort, never()).findById(any());
+    }
+
+    @Test
+    void should_accept_supply_when_referenced_supply_exists() {
+        var referenced = br.com.fiap.postech.adapter.output.supply.persistence.entity.SupplyEntity.builder()
+                .id(7L)
+                .build();
+        CatalogServicesEntity input = CatalogServicesEntity.builder()
+                .name("Servico")
+                .basePrice(BigDecimal.TEN)
+                .supplies(List.of(NeededSupplyEntity.builder()
+                        .supply(referenced)
+                        .supplyAmount(5)
+                        .build()))
+                .build();
+        when(supplyPersistencePort.findById(7L)).thenReturn(Optional.of(referenced));
+        when(persistencePort.findByName("Servico")).thenReturn(Optional.empty());
+        when(persistencePort.save(input)).thenReturn(input);
+
+        CatalogServices saved = useCase.create(input);
+
+        assertThat(saved).isSameAs(input);
+    }
+
+    @Test
+    void should_reject_supply_when_referenced_supply_is_missing() {
+        var referenced = br.com.fiap.postech.adapter.output.supply.persistence.entity.SupplyEntity.builder()
+                .id(7L)
+                .build();
+        CatalogServicesEntity input = CatalogServicesEntity.builder()
+                .name("Servico")
+                .basePrice(BigDecimal.TEN)
+                .supplies(List.of(NeededSupplyEntity.builder()
+                        .supply(referenced)
+                        .supplyAmount(5)
+                        .build()))
+                .build();
+        when(supplyPersistencePort.findById(7L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> useCase.create(input))
+                .isInstanceOf(CatalogServiceNotFoundException.class);
+    }
+
+    @Test
+    void should_reject_supply_with_zero_amount() {
+        CatalogServicesEntity input = CatalogServicesEntity.builder()
+                .name("Servico")
+                .basePrice(BigDecimal.TEN)
+                .supplies(List.of(NeededSupplyEntity.builder()
+                        .supply(null)
+                        .supplyAmount(0)
+                        .build()))
+                .build();
+
+        assertThatThrownBy(() -> useCase.create(input))
+                .isInstanceOf(br.com.fiap.postech.domain.catalogservices.exception.InvalidSupplyQuantityException.class);
+    }
+
+    @Test
+    void should_reject_supply_with_null_amount() {
+        CatalogServicesEntity input = CatalogServicesEntity.builder()
+                .name("Servico")
+                .basePrice(BigDecimal.TEN)
+                .supplies(List.of(NeededSupplyEntity.builder()
+                        .supply(null)
+                        .supplyAmount(null)
+                        .build()))
+                .build();
+
+        assertThatThrownBy(() -> useCase.create(input))
+                .isInstanceOf(br.com.fiap.postech.domain.catalogservices.exception.InvalidSupplyQuantityException.class);
     }
 }

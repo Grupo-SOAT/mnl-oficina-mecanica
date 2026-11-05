@@ -98,21 +98,6 @@ paths:
 #  /purchase-orders/{id}:
 #    $ref: './endpoints/purchase-orders_id.yaml'
 
-  /service-orders:
-    $ref: './endpoints/service-orders.yaml'
-  /service-orders/cascade:
-    $ref: './endpoints/service-orders_cascade.yaml'
-  /service-orders/{id}:
-    $ref: './endpoints/service-orders_id.yaml'
-  /service-orders/{id}/services:
-    $ref: './endpoints/service-orders_services.yaml'
-  /service-orders/{id}/services/{serviceId}:
-    $ref: './endpoints/service-orders_services_id.yaml'
-  /service-orders/{id}/progress:
-    $ref: './endpoints/service-orders_progress.yaml'
-  /service-orders/{id}/budget:
-    $ref: './endpoints/service-orders_budget_decision.yaml'
-
   /reports/catalog/services/{id}/average-time:
     $ref: './endpoints/reports_service_average_time.yaml'
   /reports/catalog/services/average-time:
