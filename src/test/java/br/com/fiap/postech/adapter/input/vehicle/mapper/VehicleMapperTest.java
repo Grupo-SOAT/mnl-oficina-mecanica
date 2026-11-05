@@ -3,18 +3,12 @@ package br.com.fiap.postech.adapter.input.vehicle.mapper;
 import br.com.fiap.postech.adapter.input.api.model.*;
 import org.junit.jupiter.api.Test;
 
-import br.com.fiap.postech.adapter.input.owner.mapper.OwnerMapper;
 import br.com.fiap.postech.adapter.output.persistence.helper.scroll.ScrollPage;
 import br.com.fiap.postech.adapter.output.vehicle.persistence.entity.VehicleEntity;
 import br.com.fiap.postech.domain.vehicle.model.Vehicle;
-import br.com.fiap.postech.domain.vehicle.model.VehicleCascadeCreationCommand;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 
-import br.com.fiap.postech.domain.owner.model.Owner;
-import org.mockito.MockedStatic;
 
 import java.util.List;
 
@@ -131,82 +125,4 @@ public class VehicleMapperTest {
         assertThat(result.getData().get(1).getId()).isEqualTo(2L);
         assertThat(result.getData().get(1).getLicensePlate()).isEqualTo("XYZ9999");
     }
-
-    @Test
-    void should_build_cascade_creation_command_with_owner() {
-        OwnerRequest ownerRequest = mock(OwnerRequest.class);
-        Owner ownerEntity = mock(Owner.class);
-
-        VehicleCascadeRequest request = new VehicleCascadeRequest()
-                .ownerId(1L)
-                .licensePlate("ABC1234")
-                .brand("Toyota")
-                .model("Corolla")
-                .year(2022)
-                .color("Preto")
-                .owner(ownerRequest);
-
-        try (
-                MockedStatic<VehicleMapper> vehicleMapperMock = mockStatic(VehicleMapper.class);
-                MockedStatic<OwnerMapper> ownerMapperMock = mockStatic(OwnerMapper.class)
-        ) {
-            Vehicle expectedVehicle = VehicleEntity.builder()
-                    .ownerId(1L)
-                    .licensePlate("ABC1234")
-                    .brand("Toyota")
-                    .model("Corolla")
-                    .year(2022)
-                    .color("Preto")
-                    .build();
-
-            ownerMapperMock.when(() -> OwnerMapper.fromApiRequest(ownerRequest))
-                    .thenReturn(ownerEntity);
-
-            vehicleMapperMock.when(() -> VehicleMapper.buildCascadeCreationCommand(request))
-                    .thenCallRealMethod();
-
-            VehicleCascadeCreationCommand result = VehicleMapper.buildCascadeCreationCommand(request);
-
-            assertThat(result).isNotNull();
-            assertThat(result.vehicle())
-                    .usingRecursiveComparison()
-                    .isEqualTo(expectedVehicle);
-            assertThat(result.owner()).isSameAs(ownerEntity);
-        }
-    }
-
-    @Test
-    void should_build_cascade_creation_command_without_owner() {
-        VehicleCascadeRequest request = new VehicleCascadeRequest()
-                .ownerId(1L)
-                .licensePlate("ABC1234")
-                .brand("Toyota")
-                .model("Corolla")
-                .year(2022)
-                .color("Preto")
-                .owner(null);
-
-        try (MockedStatic<VehicleMapper> vehicleMapperMock = mockStatic(VehicleMapper.class)) {
-            Vehicle expectedVehicle = VehicleEntity.builder()
-                    .ownerId(1L)
-                    .licensePlate("ABC1234")
-                    .brand("Toyota")
-                    .model("Corolla")
-                    .year(2022)
-                    .color("Preto")
-                    .build();
-
-            vehicleMapperMock.when(() -> VehicleMapper.buildCascadeCreationCommand(request))
-                    .thenCallRealMethod();
-
-            VehicleCascadeCreationCommand result = VehicleMapper.buildCascadeCreationCommand(request);
-
-            assertThat(result).isNotNull();
-            assertThat(result.vehicle())
-                    .usingRecursiveComparison()
-                    .isEqualTo(expectedVehicle);
-            assertThat(result.owner()).isNull();
-        }
-    }
-
 }

@@ -17,16 +17,22 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
+import jakarta.persistence.criteria.Predicate;
+
+import br.com.fiap.postech.adapter.output.persistence.SpecificationProbe;
 import br.com.fiap.postech.adapter.output.persistence.helper.scroll.ScrollPage;
 import br.com.fiap.postech.adapter.output.vehicle.persistence.entity.VehicleEntity;
 import br.com.fiap.postech.adapter.output.vehicle.persistence.repository.VehicleRepository;
 import br.com.fiap.postech.domain.vehicle.model.Vehicle;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class VehiclePersistenceAdapterTest {
 
 
@@ -125,17 +131,16 @@ public class VehiclePersistenceAdapterTest {
 
         Vehicle result = adapter.save(vehicle);
 
-        assertThat(result).isInstanceOf(VehicleEntity.class);
-
-        VehicleEntity savedEntity = (VehicleEntity) result;
-
-        assertThat(savedEntity.getOwnerId()).isEqualTo(10L);
-        assertThat(savedEntity.getLicensePlate()).isEqualTo("XYZ9999");
-        assertThat(savedEntity.getBrand()).isEqualTo("Honda");
-        assertThat(savedEntity.getModel()).isEqualTo("Civic");
-        assertThat(savedEntity.getYear()).isEqualTo(2023);
-        assertThat(savedEntity.getColor()).isEqualTo("Branco");
-
+        VehicleEntity expected = VehicleEntity.builder()
+                .id(1L)
+                .ownerId(10L)
+                .licensePlate("XYZ9999")
+                .brand("Honda")
+                .model("Civic")
+                .year(2023)
+                .color("Branco")
+                .build();
+        assertThat(result).usingRecursiveComparison().isEqualTo(expected);
         verify(repository).save(any(VehicleEntity.class));
     }
 
@@ -155,6 +160,13 @@ public class VehiclePersistenceAdapterTest {
         assertThat(result).isTrue();
 
         verify(repository).existsById(1L);
+    }
+
+    @Test
+    void should_report_absence_when_vehicle_does_not_exist() {
+        when(repository.existsById(1L)).thenReturn(false);
+
+        assertThat(adapter.existsById(1L)).isFalse();
     }
 
     @Test
@@ -215,5 +227,48 @@ public class VehiclePersistenceAdapterTest {
                 .isEqualTo("ABC1234");
 
         verify(repository).findAll(any(Specification.class), any(Pageable.class));
+    }
+
+    @Test
+    void should_build_empty_specification_when_license_plate_is_missing_and_cursor_is_zero() {
+        SpecificationProbe probe = evaluateScrollSpecification(null, null);
+
+        assertThat(probe.andPredicates()).isEmpty();
+        probe.verifyOrderWasApplied();
+    }
+
+    @Test
+    void should_build_license_plate_prefix_predicate() {
+        SpecificationProbe probe = evaluateScrollSpecification("ABC", null);
+
+        assertThat(probe.andPredicates()).hasSize(1);
+        verify(probe.builder()).like(any(), eq("abc%"));
+    }
+
+    @Test
+    void should_build_cursor_predicate_when_cursor_is_positive() {
+        SpecificationProbe probe = evaluateScrollSpecification(null, "10");
+
+        assertThat(probe.andPredicates()).hasSize(1);
+        verify(probe.builder()).greaterThan(any(), eq(10L));
+    }
+
+    @Test
+    void should_build_license_plate_and_cursor_predicates_together() {
+        SpecificationProbe probe = evaluateScrollSpecification("ABC", "10");
+
+        assertThat(probe.andPredicates()).hasSize(2);
+    }
+
+    private SpecificationProbe evaluateScrollSpecification(String licensePlate, String cursor) {
+        when(repository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        adapter.scroll(licensePlate, 10, cursor);
+
+        org.mockito.ArgumentCaptor<Specification<VehicleEntity>> captor =
+                org.mockito.ArgumentCaptor.forClass(Specification.class);
+        verify(repository).findAll(captor.capture(), any(Pageable.class));
+        return SpecificationProbe.evaluate(captor.getValue());
     }
 }

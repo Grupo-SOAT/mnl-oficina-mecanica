@@ -61,4 +61,18 @@ class MapperTest {
         assertTrue(result.getIsLast());
         assertEquals(1, result.getData().size());
     }
+
+    @Test
+    void shouldReturnNullRolesWhenUserHasNoRoles() {
+        UserData result = mapper.toClientResponse(new User(1L, "andre", null));
+
+        assertNull(result.getRoles());
+    }
+
+    @Test
+    void shouldReturnEmptyRolesWhenUserHasEmptyRoles() {
+        UserData result = mapper.toClientResponse(new User(1L, "andre", List.of()));
+
+        assertTrue(result.getRoles().isEmpty());
+    }
 }

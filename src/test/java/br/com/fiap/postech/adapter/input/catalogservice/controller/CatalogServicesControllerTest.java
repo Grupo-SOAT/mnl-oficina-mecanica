@@ -300,4 +300,31 @@ public class CatalogServicesControllerTest {
                 .isEqualTo(expectedResponseBody);
     }
 
+
+    @Test
+    void should_handle_invalid_catalog_service_name_as_bad_request() {
+        var response = controller.handleBadRequest(
+                new br.com.fiap.postech.domain.catalogservices.exception.InvalidCatalogServiceNameException());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getReason()).isEqualTo("INVALID_CATALOG_SERVICE_NAME");
+    }
+
+    @Test
+    void should_handle_invalid_catalog_service_price_as_bad_request() {
+        var response = controller.handleBadRequest(
+                new br.com.fiap.postech.domain.catalogservices.exception.InvalidCatalogServicePriceException());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getReason()).isEqualTo("INVALID_CATALOG_SERVICE_PRICE");
+    }
+
+    @Test
+    void should_handle_invalid_supply_quantity_as_bad_request() {
+        var response = controller.handleBadRequest(
+                new br.com.fiap.postech.domain.catalogservices.exception.InvalidSupplyQuantityException());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getReason()).isEqualTo("INVALID_SUPPLY_QUANTITY");
+    }
 }

@@ -89,17 +89,12 @@ public class ServiceReportingAdapter implements ServiceReportingPort {
         return variables;
     }
 
-    private String generateHTML(Map<String, Object> variables, String template) {
+    private byte[] writePDF(Map<String, Object> variables, String template) {
         final var context = new Context();
         context.setVariables(variables);
         context.setVariable(BASE_URL_PROP, getBaseUrl());
         context.setVariable(REPORT_GENERATED_AT_PROP, LocalDateTime.now().format(REPORT_DATE_FORMATTER));
-
-        return templateEngine.process(template, context);
-    }
-
-    private byte[] writePDF(Map<String, Object> variables, String template) {
-        final var html = generateHTML(variables, template);
+        final var html = templateEngine.process(template, context);
         final var converterProperties = new ConverterProperties();
         converterProperties.setBaseUri(getBaseUrl());
 
