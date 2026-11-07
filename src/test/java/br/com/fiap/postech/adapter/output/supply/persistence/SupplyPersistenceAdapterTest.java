@@ -10,9 +10,15 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+
+import jakarta.persistence.criteria.Predicate;
+
+import br.com.fiap.postech.adapter.output.persistence.SpecificationProbe;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,6 +34,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class SupplyPersistenceAdapterTest {
     @Mock
     private SupplyRepository repository;
@@ -137,6 +144,73 @@ class SupplyPersistenceAdapterTest {
         boolean exists = adapter.existsById(55L);
 
         assertThat(exists).isTrue();
+    }
+
+    @Test
+    void should_report_absence_when_supply_does_not_exist() {
+        when(repository.existsById(55L)).thenReturn(false);
+
+        assertThat(adapter.existsById(55L)).isFalse();
+    }
+
+    @Test
+    void should_find_all_supplies_by_ids() {
+        SupplyEntity first = SupplyEntity.builder().id(1L).sku("SKU1").build();
+        SupplyEntity second = SupplyEntity.builder().id(2L).sku("SKU2").build();
+        when(repository.findAllById(List.of(1L, 2L))).thenReturn(List.of(first, second));
+
+        assertThat(adapter.findAllById(List.of(1L, 2L)))
+                .usingRecursiveFieldByFieldElementComparator()
+                .containsExactly(first, second);
+    }
+
+    @Test
+    void should_return_empty_list_when_no_supplies_match_ids() {
+        when(repository.findAllById(List.of(99L))).thenReturn(List.of());
+
+        assertThat(adapter.findAllById(List.of(99L))).isEmpty();
+    }
+
+    @Test
+    void should_build_empty_specification_when_sku_is_blank_and_cursor_is_zero() {
+        SpecificationProbe probe = evaluateScrollSpecification("   ", null);
+
+        assertThat(probe.andPredicates()).isEmpty();
+        probe.verifyOrderWasApplied();
+    }
+
+    @Test
+    void should_build_sku_predicate_when_sku_is_informed() {
+        SpecificationProbe probe = evaluateScrollSpecification("ABC", null);
+
+        assertThat(probe.andPredicates()).hasSize(1);
+        verify(probe.builder()).like(any(), eq("%abc%"));
+    }
+
+    @Test
+    void should_build_cursor_predicate_when_cursor_is_positive() {
+        SpecificationProbe probe = evaluateScrollSpecification(null, "10");
+
+        assertThat(probe.andPredicates()).hasSize(1);
+        verify(probe.builder()).greaterThan(any(), eq(10L));
+    }
+
+    @Test
+    void should_build_sku_and_cursor_predicates_together() {
+        SpecificationProbe probe = evaluateScrollSpecification("ABC", "10");
+
+        assertThat(probe.andPredicates()).hasSize(2);
+    }
+
+    private SpecificationProbe evaluateScrollSpecification(String sku, String cursor) {
+        when(repository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        adapter.scroll(sku, 10, cursor);
+
+        ArgumentCaptor<Specification<SupplyEntity>> captor = ArgumentCaptor.forClass(Specification.class);
+        verify(repository).findAll(captor.capture(), any(Pageable.class));
+        return SpecificationProbe.evaluate(captor.getValue());
     }
 
     private static final class TestSupply implements Supply {

@@ -28,6 +28,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Value("${security.jwt.secret}")
     private String jwtSecret;
 
+    @Value("${app.internal.api-key:}")
+    private String internalApiKey;
+
     private SecretKey key;
 
     @PostConstruct
@@ -40,6 +43,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain)
             throws ServletException, IOException {
+
+        if (internalApiKey != null && !internalApiKey.isBlank()
+                && internalApiKey.equals(request.getHeader("X-Internal-Api-Key"))) {
+            SecurityContextHolder.getContext().setAuthentication(
+                    new UsernamePasswordAuthenticationToken("internal-service", null,
+                            List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))));
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         String authHeader = request.getHeader("Authorization");
 

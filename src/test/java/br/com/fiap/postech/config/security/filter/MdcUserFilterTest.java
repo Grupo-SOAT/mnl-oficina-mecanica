@@ -88,4 +88,64 @@ class MdcUserFilterTest {
 
         verify(chain).doFilter(any(), any());
     }
+
+    @Test
+    void propagatesCorrelationIdFromHeader() throws Exception {
+        var request = new MockHttpServletRequest();
+        request.addHeader("X-Correlation-Id", "corr-123");
+        var response = new MockHttpServletResponse();
+        var chain = mock(FilterChain.class);
+        doAnswer(invocation -> {
+            assertThat(MDC.get("correlation_id")).isEqualTo("corr-123");
+            return null;
+        }).when(chain).doFilter(any(), any());
+
+        filter.doFilter(request, response, chain);
+
+        assertThat(response.getHeader("X-Correlation-Id")).isEqualTo("corr-123");
+        assertThat(MDC.get("correlation_id")).isNull();
+    }
+
+    @Test
+    void generatesCorrelationIdWhenHeaderIsAbsent() throws Exception {
+        var response = new MockHttpServletResponse();
+        var chain = mock(FilterChain.class);
+        doAnswer(invocation -> {
+            assertThat(MDC.get("correlation_id")).isNotBlank();
+            return null;
+        }).when(chain).doFilter(any(), any());
+
+        filter.doFilter(new MockHttpServletRequest(), response, chain);
+
+        assertThat(response.getHeader("X-Correlation-Id")).isNotBlank();
+    }
+
+    @Test
+    void extractsServiceOrderIdFromPath() throws Exception {
+        var request = new MockHttpServletRequest("GET", "/service-orders/42/budget");
+        var chain = mock(FilterChain.class);
+        doAnswer(invocation -> {
+            assertThat(MDC.get("so_id")).isEqualTo("42");
+            return null;
+        }).when(chain).doFilter(any(), any());
+
+        filter.doFilter(request, new MockHttpServletResponse(), chain);
+
+        assertThat(MDC.get("so_id")).isNull();
+    }
+
+    @Test
+    void propagatesBranchIdFromRequestAttribute() throws Exception {
+        var request = new MockHttpServletRequest();
+        request.setAttribute("branchId", 7L);
+        var chain = mock(FilterChain.class);
+        doAnswer(invocation -> {
+            assertThat(MDC.get("branch_id")).isEqualTo("7");
+            return null;
+        }).when(chain).doFilter(any(), any());
+
+        filter.doFilter(request, new MockHttpServletResponse(), chain);
+
+        assertThat(MDC.get("branch_id")).isNull();
+    }
 }

@@ -3,7 +3,7 @@ package br.com.fiap.postech.domain.reporting.usecase.impl;
 import br.com.fiap.postech.domain.reporting.exception.ReportingNoMatchingServiceException;
 import br.com.fiap.postech.domain.reporting.exception.ReportingServiceNotFoundException;
 import br.com.fiap.postech.domain.reporting.model.ServiceCalculatedAverageTime;
-import br.com.fiap.postech.port.persistence.service.ServicePersistencePort;
+import br.com.fiap.postech.port.reporting.ServiceReportingQueryPort;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 class ServiceReportingUseCaseImplTest {
 
     @Mock
-    private ServicePersistencePort persistencePort;
+    private ServiceReportingQueryPort queryPort;
 
     @InjectMocks
     private ServiceReportingUseCaseImpl useCase;
@@ -41,17 +41,17 @@ class ServiceReportingUseCaseImplTest {
                 .averageTimeBetweenApproveAndComplete(3.0)
                 .averageTimeAwaitingBudgetApproval(1.5)
                 .build();
-        when(persistencePort.calculateAverageTime(10L)).thenReturn(expected);
+        when(queryPort.findAverageTime(10L)).thenReturn(java.util.Optional.of(expected));
 
         ServiceCalculatedAverageTime result = useCase.calculateAverageTime(10L);
 
         assertThat(result).isSameAs(expected);
-        verify(persistencePort).calculateAverageTime(10L);
+        verify(queryPort).findAverageTime(10L);
     }
 
     @Test
     void should_throw_not_found_when_average_time_for_catalog_service_is_null() {
-        when(persistencePort.calculateAverageTime(42L)).thenReturn(null);
+        when(queryPort.findAverageTime(42L)).thenReturn(java.util.Optional.empty());
 
         assertThatThrownBy(() -> useCase.calculateAverageTime(42L))
                 .isInstanceOf(ReportingServiceNotFoundException.class)
@@ -64,17 +64,17 @@ class ServiceReportingUseCaseImplTest {
                 ServiceCalculatedAverageTime.builder().id(1L).name("Freio").totalCreated(2L).build(),
                 ServiceCalculatedAverageTime.builder().id(2L).name("Suspensao").totalCreated(3L).build()
         );
-        when(persistencePort.calculateAverageTime()).thenReturn(expected);
+        when(queryPort.findAverageTimes()).thenReturn(expected);
 
         List<ServiceCalculatedAverageTime> result = useCase.calculateAverageTime();
 
         assertThat(result).isSameAs(expected);
-        verify(persistencePort).calculateAverageTime();
+        verify(queryPort).findAverageTimes();
     }
 
     @Test
     void should_throw_no_matching_when_average_time_for_all_services_is_null() {
-        when(persistencePort.calculateAverageTime()).thenReturn(null);
+        when(queryPort.findAverageTimes()).thenReturn(null);
 
         assertThatThrownBy(() -> useCase.calculateAverageTime())
                 .isInstanceOf(ReportingNoMatchingServiceException.class)
@@ -83,7 +83,7 @@ class ServiceReportingUseCaseImplTest {
 
     @Test
     void should_throw_no_matching_when_average_time_for_all_services_is_empty() {
-        when(persistencePort.calculateAverageTime()).thenReturn(List.of());
+        when(queryPort.findAverageTimes()).thenReturn(List.of());
 
         assertThatThrownBy(() -> useCase.calculateAverageTime())
                 .isInstanceOf(ReportingNoMatchingServiceException.class)

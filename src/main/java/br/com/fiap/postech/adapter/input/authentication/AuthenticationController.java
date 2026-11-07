@@ -25,13 +25,11 @@ public class AuthenticationController implements AuthenticationApi {
     @Override
     public ResponseEntity<TokenResponse> authenticate(LoginRequest request) {
 
-        System.out.println("Request para login recebida!");
 
         var domainResponse = authenticationUseCase.gerarTokenParaUsuario(mapper.toDomain(request));
 
         var clientResponse = mapper.toClientResponse(domainResponse);
 
-        System.out.println("token gerado com sucesso.");
 
         return ResponseEntity.ok(clientResponse);
     }
@@ -39,14 +37,12 @@ public class AuthenticationController implements AuthenticationApi {
     @Override
     public ResponseEntity<Void> changePassword(ChangePasswordRequest request) {
 
-        System.out.println("Request para mudar a senha do usuario recebida.");
 
         var userData = new UserChangePassword(request.getNewPassword(), 
         request.getUsername(), request.getPassword());
 
         authenticationUseCase.mudarSenhaUsuario(userData);
 
-        System.out.println("Senha alterada com sucesso! Usuario:" + request.getUsername());
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
@@ -54,11 +50,9 @@ public class AuthenticationController implements AuthenticationApi {
     @Override
     public ResponseEntity<TokenResponse> authenticatedWithApiKey(String apiKey) {
 
-        System.out.println("Request para autenticacao do CHATBOT recebida.");
 
         var domainResponse = authenticationUseCase.autenticarChatBot(apiKey);
 
-        System.out.println("chat bot autenticado!!");
 
         var clientResponse = mapper.toClientResponse(domainResponse);
 

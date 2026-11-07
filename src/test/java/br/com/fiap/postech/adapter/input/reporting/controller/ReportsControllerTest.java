@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -170,5 +171,17 @@ class ReportsControllerTest {
                         "ID;Nome;Total\n2;Suspensao;10\n3;Pintura;10"
                 )
         );
+    }
+
+    @Test
+    void should_build_filename_with_timestamp() {
+        when(serviceReportingUseCase.calculateAverageTime(1L))
+                .thenReturn(new ServiceCalculatedAverageTime(1L, "Alinhamento", 1L, 1L, 1.0, 1.0, 1.0, 1.0));
+        when(serviceReportingPort.writePDF(any())).thenReturn(new byte[]{1});
+
+        ResponseEntity<Resource> response = controller.getServiceAverageTime(1L);
+
+        assertThat(response.getHeaders().getContentDisposition().getFilename())
+                .matches("service-1-average-time_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}\\.pdf");
     }
 }

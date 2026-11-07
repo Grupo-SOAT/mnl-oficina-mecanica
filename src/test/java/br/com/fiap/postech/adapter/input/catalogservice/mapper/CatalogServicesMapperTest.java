@@ -108,14 +108,9 @@ public class CatalogServicesMapperTest {
 
         List<NeededSupplyEntity> neededSupplyEntitiesFirst = new ArrayList<>();
         neededSupplyEntitiesFirst.add(NeededSupplyEntity.builder()
-                .servicesSuppliesId(1L)
                 .supplyAmount(100)
-                .supply(SupplyEntity.builder()
-                        .id(1L)
-                        .name("Tinta")
-                        .unitPrice(BigDecimal.valueOf(1080))
-                        .build()).
-                build());
+                .supply(SupplyEntity.builder().id(1L).build())
+                .build());
 
         CatalogServicesEntity expected = CatalogServicesEntity.builder()
                 .id(1L)
@@ -130,7 +125,7 @@ public class CatalogServicesMapperTest {
         assertThat(mapped)
                 .isNotNull()
                 .usingRecursiveComparison()
-                .ignoringFields("supplies", "id")
+                .ignoringFields("id")
                 .isEqualTo(expected);
     }
 
@@ -147,14 +142,9 @@ public class CatalogServicesMapperTest {
 
         List<NeededSupplyEntity> neededSupplyEntitiesFirst = new ArrayList<>();
         neededSupplyEntitiesFirst.add(NeededSupplyEntity.builder()
-                .servicesSuppliesId(1L)
                 .supplyAmount(100)
-                .supply(SupplyEntity.builder()
-                        .id(1L)
-                        .name("Pneu")
-                        .unitPrice(BigDecimal.valueOf(15000))
-                        .build()).
-                build());
+                .supply(SupplyEntity.builder().id(1L).build())
+                .build());
 
         CatalogServicesEntity expected = CatalogServicesEntity.builder()
                 .id(1L)
@@ -169,7 +159,6 @@ public class CatalogServicesMapperTest {
         assertThat(mapped)
                 .isNotNull()
                 .usingRecursiveComparison()
-                .ignoringFields("supplies")
                 .isEqualTo(expected);
     }
 
@@ -209,5 +198,29 @@ public class CatalogServicesMapperTest {
                 .isNotNull()
                 .usingRecursiveComparison()
                 .isEqualTo(expected);
+    }
+
+    @Test
+    void should_map_empty_needed_supplies_list() {
+        assertThat(CatalogServicesMapper.fromApiData(List.of())).isEmpty();
+    }
+
+    @Test
+    void should_map_needed_supply_data_to_supply_with_id() {
+        var supply = CatalogServicesMapper.to(new NeededSupplyData().idSupply(8L).quantity(2));
+
+        assertThat(supply.getId()).isEqualTo(8L);
+    }
+
+    @Test
+    void should_map_needed_supplies_to_api_data() {
+        var needed = NeededSupplyEntity.builder()
+                .supply(SupplyEntity.builder().id(4L).build())
+                .supplyAmount(6)
+                .build();
+
+        assertThat(CatalogServicesMapper.toApiData(List.of(needed)))
+                .usingRecursiveFieldByFieldElementComparator()
+                .containsExactly(new NeededSupplyData().idSupply(4L).quantity(6));
     }
 }

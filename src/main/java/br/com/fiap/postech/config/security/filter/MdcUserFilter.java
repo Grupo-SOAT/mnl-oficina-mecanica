@@ -9,8 +9,28 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+/**
+ * Populates the logging MDC with the correlation identifiers used by the platform.
+ *
+ * <p>The {@code correlation_id} is propagated from the {@code X-Correlation-Id} request header or
+ * generated when absent. The service order identifier is extracted from the request path so log
+ * lines emitted while handling a service order are traceable. The authenticated user and branch are
+ * added when available.</p>
+ */
 public class MdcUserFilter extends OncePerRequestFilter {
+
+    static final String CORRELATION_ID = "correlation_id";
+    static final String SERVICE_ORDER_ID = "so_id";
+    static final String USER_ID = "user_id";
+    static final String BRANCH_ID = "branch_id";
+    static final String CORRELATION_HEADER = "X-Correlation-Id";
+    static final String BRANCH_ATTRIBUTE = "branchId";
+
+    private static final Pattern SERVICE_ORDER_PATH = Pattern.compile("/service-orders/(\\d+)");
 
     @Override
     protected void doFilterInternal(
@@ -19,15 +39,47 @@ public class MdcUserFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         try {
-            var auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.isAuthenticated()
-                    && !"anonymousUser".equals(auth.getPrincipal())) {
-                MDC.put("user_id", auth.getName());
-            }
+            String correlationId = resolveCorrelationId(request);
+            MDC.put(CORRELATION_ID, correlationId);
+            response.setHeader(CORRELATION_HEADER, correlationId);
+
+            putServiceOrderId(request);
+            putBranchId(request);
+            putUserId();
+
             filterChain.doFilter(request, response);
         } finally {
-            MDC.remove("user_id");
+            MDC.remove(CORRELATION_ID);
+            MDC.remove(SERVICE_ORDER_ID);
+            MDC.remove(USER_ID);
+            MDC.remove(BRANCH_ID);
         }
     }
 
+    private String resolveCorrelationId(HttpServletRequest request) {
+        String header = request.getHeader(CORRELATION_HEADER);
+        return header == null || header.isBlank() ? UUID.randomUUID().toString() : header;
+    }
+
+    private void putServiceOrderId(HttpServletRequest request) {
+        Matcher matcher = SERVICE_ORDER_PATH.matcher(request.getRequestURI());
+        if (matcher.find()) {
+            MDC.put(SERVICE_ORDER_ID, matcher.group(1));
+        }
+    }
+
+    private void putBranchId(HttpServletRequest request) {
+        Object branchId = request.getAttribute(BRANCH_ATTRIBUTE);
+        if (branchId != null) {
+            MDC.put(BRANCH_ID, String.valueOf(branchId));
+        }
+    }
+
+    private void putUserId() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()
+                && !"anonymousUser".equals(auth.getPrincipal())) {
+            MDC.put(USER_ID, auth.getName());
+        }
+    }
 }

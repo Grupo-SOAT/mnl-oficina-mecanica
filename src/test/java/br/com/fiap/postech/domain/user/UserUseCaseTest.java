@@ -160,4 +160,22 @@ class UserUseCaseTest {
 
         verify(userPort).resetUserPassword(1L);
     }
+
+    @Test
+    void shouldThrowWhenUpdatingMissingUser() {
+        UserDTO dto = new UserDTO("andre", List.of(Roles.ADMIN));
+        when(userPort.findByUsername("andre")).thenReturn(Optional.empty());
+        when(userPort.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class,
+                () -> useCase.updateUser(1L, dto));
+    }
+
+    @Test
+    void shouldThrowWhenResettingMissingUser() {
+        when(userPort.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class,
+                () -> useCase.resetUserPassword(1L));
+    }
 }
